@@ -464,3 +464,118 @@ ol, ul { list-style: none; }
   .path { padding: 10px 12px; }
   .path__k { display: none; }
 }
+
+/* ── Hero variant B: the plotting sheet (plot.html) ───── */
+.pl {
+  --sheet: min(calc(100svh - var(--header) - 40px), calc(100vw - 2 * var(--gutter) - 400px), 920px);
+  position: relative; isolation: isolate; height: 100svh; min-height: 600px; overflow: hidden; color: #fff;
+  display: grid; grid-template-columns: var(--sheet) minmax(0, 400px); justify-content: center; align-items: center;
+  gap: clamp(24px, 3vw, 48px); padding: calc(var(--header) + 12px) var(--gutter) 28px;
+  background: #062a55;
+}
+[data-mode="drawing"] .pl { background: #07111D; }
+.pl__bg { position: absolute; inset: 0; z-index: -1; background: transparent; }
+.pl__bg .ph__img { opacity: .1; filter: grayscale(1); }
+.pl__bg .ph__bp { background: #07111D; opacity: .22; }
+.pl__bg::after { display: none; }
+
+.pl__sheet { position: relative; width: var(--sheet); aspect-ratio: 1; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+.pl__sheet.is-dragging { cursor: grabbing; }
+.pl__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.pl__svg * { vector-effect: non-scaling-stroke; }
+.pl__frame { fill: rgba(4, 30, 62, .55); stroke: rgba(255, 255, 255, .55); stroke-width: 1; }
+[data-mode="drawing"] .pl__frame { fill: rgba(7, 17, 29, .88); }
+.pl-radial { stroke: rgba(255, 255, 255, .3); stroke-width: 1; stroke-dasharray: 1 5; }
+.pl-radial--30 { stroke: rgba(255, 255, 255, .45); }
+.pl-axis { stroke: rgba(255, 255, 255, .55); stroke-width: 1; }
+.pl-ring { fill: none; stroke: rgba(255, 255, 255, .32); stroke-width: 1; stroke-dasharray: 1 5; }
+.pl-ring--major { stroke: rgba(255, 255, 255, .6); stroke-dasharray: none; }
+.pl-tick { stroke: rgba(255, 255, 255, .5); stroke-width: 1; }
+.pl-tick--10 { stroke: rgba(255, 255, 255, .9); }
+.pl-num { fill: rgba(255, 255, 255, .85); font: 500 13px var(--f-text); letter-spacing: .04em; text-anchor: middle; dominant-baseline: middle; font-variant-numeric: tabular-nums; }
+.pl-num--rev { fill: rgba(255, 255, 255, .4); font-size: 9px; }
+.pl-north { fill: rgba(255, 255, 255, .9); }
+.pl__hdg { stroke: var(--accent); stroke-width: 1.5; }
+.pl__own circle { fill: var(--accent); }
+.pl-wedge { fill: #CEE2EC; }
+.pl-sweep-line { stroke: rgba(206, 226, 236, .55); stroke-width: 1; }
+.pl__cursor { opacity: 0; transition: opacity .2s; pointer-events: none; }
+.pl__cursor.is-on { opacity: 1; }
+.pl__cursor line, .pl__cursor circle { fill: none; stroke: #CEE2EC; stroke-width: 1; stroke-dasharray: 6 4; }
+
+.pl-dot { fill: rgba(4, 30, 62, .9); stroke: #fff; stroke-width: 1.5; }
+.pl-vec { stroke: rgba(255, 255, 255, .7); stroke-width: 1.5; }
+#pl-arrow path { fill: context-stroke; }
+.pl-rml { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 8 6; opacity: 0; transition: opacity .3s; }
+.pl-box { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: 0; transition: opacity .3s; }
+.pl-target.is-active .pl-dot { stroke: var(--accent); fill: var(--accent); }
+.pl-target.is-active .pl-vec { stroke: var(--accent); }
+.pl-target.is-active .pl-rml, .pl-target.is-active .pl-box { opacity: 1; }
+
+.pl__labels { position: absolute; inset: 0; pointer-events: none; }
+.pl-label { position: absolute; left: 0; top: 0; }
+.pl-label a { display: grid; gap: 2px; padding: 4px 6px; pointer-events: auto; text-decoration: none; white-space: nowrap; background: rgba(4, 30, 62, .7); border-left: 1px solid rgba(255, 255, 255, .5); transition: border-color .3s; }
+.pl-label b { font: 600 .875rem/1.1 var(--f-display); font-stretch: 115%; letter-spacing: .06em; text-transform: uppercase; }
+.pl-label span { font-size: .6875rem; letter-spacing: .06em; color: rgba(255, 255, 255, .7); font-variant-numeric: tabular-nums; }
+.pl-label.is-flip a { transform: translateX(-100%); border-left: 0; border-right: 1px solid rgba(255, 255, 255, .5); text-align: right; }
+.pl-label.is-active a { border-left-color: var(--accent); border-right-color: var(--accent); }
+.pl-label.is-active b { color: #fff; }
+[data-mode="drawing"] .pl-label a { background: rgba(7, 17, 29, .8); }
+
+.pl__corner { position: absolute; font-size: .625rem; letter-spacing: .12em; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; pointer-events: none; }
+.pl__corner--tl { left: 3.2%; top: 3%; }
+.pl__corner--tr { right: 3.2%; top: 3%; }
+.pl__corner--bl { left: 3.2%; bottom: 3%; }
+.pl__corner--br { right: 3.2%; bottom: 3%; }
+
+/* the ARPA panel */
+.arpa { display: grid; gap: 12px; align-content: center; min-width: 0; font-variant-numeric: tabular-nums; }
+.arpa__intro { display: grid; gap: 12px; margin-bottom: 8px; }
+.arpa h1 { font: 700 clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem)/1.06 var(--f-display); font-stretch: 118%; text-wrap: balance; }
+.arpa__lede { color: rgba(255, 255, 255, .78); font-size: .9375rem; line-height: 1.5; }
+.arpa__box { border: 1px solid rgba(255, 255, 255, .35); padding: 10px 12px; background: rgba(4, 30, 62, .5); }
+[data-mode="drawing"] .arpa__box { background: rgba(7, 17, 29, .9); }
+.arpa__hdg { display: grid; grid-template-columns: auto 1fr auto auto; align-items: baseline; gap: 10px; font-size: .6875rem; letter-spacing: .12em; color: rgba(255, 255, 255, .65); }
+.arpa__hdg b { font: 300 1.6rem/1 var(--f-display); font-stretch: 105%; color: var(--accent); letter-spacing: 0; }
+.arpa__hdg b:last-child { color: #fff; }
+.arpa__h { font-size: .6875rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .65); margin-bottom: 6px; }
+.arpa__table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.arpa__table th { text-align: left; font-weight: 500; font-size: .625rem; letter-spacing: .12em; color: rgba(255, 255, 255, .5); padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, .2); }
+.arpa__table td { padding: 0; border-bottom: 1px solid rgba(255, 255, 255, .12); height: 38px; }
+.arpa__table td:first-child { width: 2.5rem; color: rgba(255, 255, 255, .6); }
+.arpa__table td:nth-child(3), .arpa__table td:nth-child(4) { width: 3.6rem; text-align: right; }
+.arpa__table th:nth-child(3), .arpa__table th:nth-child(4) { text-align: right; }
+.arpa__table a { display: flex; align-items: center; min-height: 38px; text-decoration: none; font: 600 .875rem/1 var(--f-display); font-stretch: 112%; letter-spacing: .06em; text-transform: uppercase; }
+.arpa__table tr.is-active td { color: var(--accent); }
+.arpa__table tr.is-active a { color: var(--accent); }
+.arpa__target { display: grid; gap: 8px; border-color: var(--accent); }
+.arpa__target .arpa__h { color: var(--accent); margin: 0; }
+.arpa__text { font-size: .9375rem; line-height: 1.45; color: rgba(255, 255, 255, .85); min-height: 2.9em; }
+.arpa__go { justify-self: start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; font-size: .8125rem; }
+.arpa__go:hover { background: #d23f19; }
+.arpa__hint { font-size: .6875rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255, 255, 255, .5); transition: opacity .6s; }
+.arpa__hint.is-gone { opacity: 0; }
+@media (max-height: 820px) and (min-width: 1000px) { .arpa__lede { display: none; } }
+
+@media (max-width: 999px) {
+  .pl {
+    --sheet: min(calc(100vw - 2 * var(--gutter)), 560px, calc(100svh - 280px));
+    height: auto; min-height: 100svh; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: start;
+    gap: 12px; padding: calc(var(--header) + 4px) var(--gutter) 16px;
+  }
+  .pl__sheet { min-width: 220px; order: 2; }
+  .arpa { display: contents; }
+  .arpa__intro { order: 1; justify-self: stretch; margin: 0; }
+  .arpa .eyebrow, .arpa__lede, .arpa__hdg, .arpa__hint { display: none; }
+  .arpa h1 { font-size: clamp(1.4rem, 1rem + 2.4vw, 2rem); }
+  .arpa__box { order: 3; justify-self: stretch; }
+  .arpa__box:not(.arpa__target) { display: none; }
+  .arpa__target { order: 4; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .arpa__text { display: none; }
+  .arpa__table td, .arpa__table a { height: 32px; min-height: 32px; }
+  .pl__corner--tr, .pl__corner--br, .pl__corner--bl { display: none; }
+  .pl-label b { font-size: .6875rem; }
+  .pl-label span { display: none; }
+  .pl-num { font-size: 20px; }
+  .pl-num--rev { display: none; }
+}

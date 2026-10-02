@@ -26,6 +26,7 @@ NAV = [
     ("contact.html", "contact", "Contact", "270"),
 ]
 PAGES = ["index.html"] + [n[0] for n in NAV]
+VARIANTS = ["plot.html"]  # alternative heroes: built, but kept out of the sitemap and search
 
 
 def part(name):
@@ -41,7 +42,7 @@ def nav_html(current):
 
 
 def build():
-    for name in PAGES:
+    for name in PAGES + VARIANTS:
         raw = (SRC / "pages" / name).read_text()
         m = re.match(r"---\n(.*?)\n---\n", raw, re.S)
         meta = dict(line.split(": ", 1) for line in m.group(1).splitlines())
@@ -53,6 +54,7 @@ def build():
             .replace("{{description}}", meta["description"])
             .replace("{{url}}", url)
             .replace("{{body}}", meta.get("body", "page"))
+            .replace("{{robots}}", '<meta name="robots" content="noindex">' if name in VARIANTS else "")
             + part("sprite.html")
             + part("header.html").replace("{{nav}}", nav_html(meta.get("page", "")))
             + body
