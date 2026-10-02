@@ -313,3 +313,4 @@ ol, ul { list-style: none; }
   .foot__mode { margin-left: 0; }
 }
 @media (hover: none) { .readout__go:hover span, .btn:hover span { transform: none; } }
+@media (hover: none) { .hint-keys { display: none; } }
