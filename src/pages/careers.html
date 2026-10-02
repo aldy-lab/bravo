@@ -1,0 +1,122 @@
+---
+title: Careers — Bravo Integrated Solutions
+description: Jobs for welders, fitters, electricians, engineers and other industrial specialists. Apply for an open position or send an open application.
+page: careers
+body: page
+---
+<main id="main">
+  <header class="phead">
+    <div class="sheet">
+      <div class="sheet__rule"><span>003 — Careers</span><span>BRG 180°</span></div>
+      <div class="split">
+        <div class="prose">
+          <h1 class="display">Join the<br>crew.</h1>
+          <p class="lede">We hire skilled trades and engineers for industrial projects. Apply for an open position, or send an open application and we will contact you when a matching project starts.</p>
+          <p><a class="btn" href="#apply">Apply now <span aria-hidden="true">→</span></a></p>
+        </div>
+        <figure class="ph ph--frame">
+          <img class="ph__img" src="assets/img/scaffold-960.webp" srcset="assets/img/scaffold-960.webp 960w, assets/img/scaffold-1920.webp 1920w" sizes="(min-width: 1000px) 50vw, 100vw" alt="Scaffolding on a construction site" width="960" height="640">
+          <img class="ph__bp" src="assets/img/scaffold-bp.webp" alt="" loading="lazy">
+          <figcaption><span class="cap-photo">Fig. 03</span><span class="cap-dwg">Dwg. 03</span> — Scaffolding</figcaption>
+        </figure>
+      </div>
+    </div>
+  </header>
+
+  <section class="sec" aria-labelledby="jobs-h">
+    <div class="sheet">
+      <div class="sheet__rule"><span id="jobs-h">Open positions</span><span data-jobs-count></span></div>
+      <ul class="jobs" data-jobs></ul>
+      <p class="empty" data-jobs-empty hidden>No positions are listed right now. Send an open application below — we keep it on file and contact you when a matching project starts.</p>
+    </div>
+  </section>
+
+  <section class="sec sec--ink" aria-labelledby="hire-h">
+    <div class="sheet">
+      <div class="sheet__rule"><span id="hire-h">How hiring works</span><span>4 steps</span></div>
+      <ol class="steps steps--row steps--4">
+        <li><span>01</span><b>Apply</b>Send the form with your trade, experience and certificates.</li>
+        <li><span>02</span><b>Interview</b>We call you to talk about your experience and the project.</li>
+        <li><span>03</span><b>Documents</b>We check your certificates and prepare the paperwork.</li>
+        <li><span>04</span><b>Mobilisation</b>You travel to the project and start with the team.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sec" id="apply" aria-labelledby="apply-h">
+    <div class="sheet">
+      <div class="sheet__rule"><span id="apply-h">Application</span><span>Form A-01</span></div>
+      <div class="split">
+        <div class="prose">
+          <h2 class="h2">Apply</h2>
+          <p>Fields marked * are required. Attach your CV and certificates if you have them.</p>
+        </div>
+        <form class="form" data-form="application" novalidate>
+          <input type="hidden" name="form" value="Job application">
+          <p class="hp" aria-hidden="true"><label>Leave empty <input name="_gotcha" tabindex="-1" autocomplete="off"></label></p>
+          <div class="field field--full">
+            <label for="a-position">Position *</label>
+            <select id="a-position" name="position" required data-positions>
+              <option value="Open application">Open application</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="a-name">Full name *</label>
+            <input id="a-name" name="name" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="a-trade">Trade / specialty *</label>
+            <input id="a-trade" name="trade" required placeholder="e.g. TIG welder">
+          </div>
+          <div class="field">
+            <label for="a-email">Email *</label>
+            <input id="a-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <label for="a-phone">Phone *</label>
+            <input id="a-phone" name="phone" type="tel" autocomplete="tel" required>
+          </div>
+          <div class="field">
+            <label for="a-exp">Experience *</label>
+            <select id="a-exp" name="experience" required>
+              <option value="">Select</option>
+              <option>Less than 2 years</option>
+              <option>2–5 years</option>
+              <option>5–10 years</option>
+              <option>More than 10 years</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="a-from">Available from</label>
+            <input id="a-from" name="available_from" type="date">
+          </div>
+          <div class="field">
+            <label for="a-certs">Certificates</label>
+            <input id="a-certs" name="certificates" placeholder="e.g. ISO 9606-1, 135 / 141">
+          </div>
+          <div class="field">
+            <label for="a-langs">Languages</label>
+            <input id="a-langs" name="languages" placeholder="e.g. English, Polish">
+          </div>
+          <div class="field field--full" data-needs-endpoint>
+            <label for="a-cv">CV and certificates</label>
+            <input id="a-cv" name="attachment" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            <small>PDF, Word or photo, up to 10 MB.</small>
+          </div>
+          <div class="field field--full">
+            <label for="a-msg">Message</label>
+            <textarea id="a-msg" name="message" rows="4"></textarea>
+          </div>
+          <div class="field field--full check">
+            <input id="a-ok" name="consent" type="checkbox" value="yes" required>
+            <label for="a-ok">I agree that Bravo Integrated Solutions stores and processes my data to assess my application. *</label>
+          </div>
+          <div class="form__foot">
+            <button class="btn" type="submit">Send application <span aria-hidden="true">→</span></button>
+            <p class="form__status" role="status" data-status></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
