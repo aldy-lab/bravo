@@ -582,7 +582,7 @@ ol, ul { list-style: none; }
 
 /* ── Hero variant C: one ring (minimal.html) ──────────── */
 .mn {
-  --dial: min(calc(100svh - var(--header) - 140px), 64vw, 780px);
+  --dial: min(calc(100svh - var(--header) - 120px), calc(100vw - 2 * var(--gutter) - 2 * (18rem + 32px)), 820px);
   position: relative; isolation: isolate; height: 100svh; min-height: 560px; overflow: hidden; color: #fff;
   background: var(--c-blue);
 }
@@ -598,16 +598,31 @@ ol, ul { list-style: none; }
 .mn__dial.is-dragging { cursor: grabbing; }
 .mn__dial svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .mn__dial svg * { vector-effect: non-scaling-stroke; }
-.mn__ring { fill: none; stroke: rgba(255, 255, 255, .5); stroke-width: 1; }
-.mn__tick { stroke: rgba(255, 255, 255, .28); stroke-width: 1; }
-.mn__tick--30 { stroke: rgba(255, 255, 255, .6); }
-.mn__num { fill: rgba(255, 255, 255, .55); font: 400 13px var(--f-text); letter-spacing: .1em; text-anchor: middle; dominant-baseline: middle; }
-.mn__vector { stroke: var(--accent); stroke-width: 1; }
-.mn__index { stroke: var(--accent); stroke-width: 2; }
-.mn__centre { stroke: rgba(255, 255, 255, .7); stroke-width: 1; fill: none; }
+.mn__frame { fill: rgba(255, 255, 255, .015); stroke: rgba(255, 255, 255, .3); stroke-width: 1; }
+.mn__radial { stroke: rgba(255, 255, 255, .22); stroke-width: 1; stroke-dasharray: 1 6; }
+.mn__axis { stroke: rgba(255, 255, 255, .3); stroke-width: 1; }
+.mn__ring { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: 1; }
+.mn__ring--dot { stroke: rgba(255, 255, 255, .3); stroke-dasharray: 1 6; }
+.mn__tick { stroke: rgba(255, 255, 255, .3); stroke-width: 1; }
+.mn__tick--10 { stroke: rgba(255, 255, 255, .7); }
+.mn__num { fill: rgba(255, 255, 255, .7); font: 400 13px var(--f-text); letter-spacing: .08em; text-anchor: middle; dominant-baseline: middle; font-variant-numeric: tabular-nums; }
+.mn__num--minor { fill: rgba(255, 255, 255, .4); font-size: 11px; }
+.mn__ranges text { fill: rgba(255, 255, 255, .45); font: 400 11px var(--f-text); }
+.mn__index { fill: var(--accent); }
+.mn__centre { stroke: rgba(255, 255, 255, .8); stroke-width: 1; fill: none; }
 .mn__cursor { opacity: 0; transition: opacity .2s; }
 .mn__cursor.is-on { opacity: 1; }
-.mn__cursor line { stroke: rgba(255, 255, 255, .9); stroke-width: 1; }
+.mn__cursor line { stroke: #fff; stroke-width: 1.5; }
+.mn-target__vec { stroke: rgba(255, 255, 255, .55); stroke-width: 1; }
+#mn-arrow path { fill: context-stroke; }
+.mn-target__rml { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 6 6; opacity: 0; transition: opacity .3s; }
+.mn-target.is-active .mn-target__vec { stroke: var(--accent); stroke-width: 1.5; }
+.mn-target.is-active .mn-target__rml { opacity: .8; }
+.mn__corner { position: absolute; font-size: .625rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .45); font-variant-numeric: tabular-nums; pointer-events: none; }
+.mn__corner--tl { left: 2.4%; top: 2.2%; }
+.mn__corner--tr { right: 2.4%; top: 2.2%; }
+.mn__corner--bl { left: 2.4%; bottom: 2.2%; }
+.mn__corner--br { right: 2.4%; bottom: 2.2%; }
 
 .mn__nodes { position: absolute; inset: 0; pointer-events: none; }
 .mn-node { position: absolute; left: 0; top: 0; }
@@ -616,7 +631,7 @@ ol, ul { list-style: none; }
 [data-mode="drawing"] .mn-node__dot { background: #07111D; }
 .mn-node__label {
   position: absolute; left: 50%; top: 50%; white-space: nowrap;
-  transform: translate(calc(-50% + var(--ox, 0) * var(--lx, 58px)), calc(-50% + var(--oy, 0) * var(--ly, 30px)));
+  transform: translate(-50%, calc(-50% + var(--side, -1) * 20px));
   font: 500 .8125rem/1 var(--f-display); font-stretch: 112%; letter-spacing: .12em; text-transform: uppercase;
   color: rgba(255, 255, 255, .6); transition: color .3s;
 }
@@ -624,7 +639,7 @@ ol, ul { list-style: none; }
 .mn-node.is-active .mn-node__dot { background: var(--accent); border-color: var(--accent); transform: scale(1.4); }
 .mn-node.is-active .mn-node__label { color: #fff; }
 
-.mn__intro { position: absolute; left: var(--gutter); bottom: clamp(24px, 5vh, 56px); max-width: 24rem; display: grid; gap: 10px; }
+.mn__intro { position: absolute; left: var(--gutter); bottom: clamp(24px, 5vh, 56px); max-width: 18rem; display: grid; gap: 10px; }
 .mn__intro h1 { font: 600 clamp(1.15rem, 1rem + .6vw, 1.5rem)/1.15 var(--f-display); font-stretch: 115%; }
 .mn__intro p { color: rgba(255, 255, 255, .65); font-size: .875rem; line-height: 1.5; }
 
@@ -634,18 +649,20 @@ ol, ul { list-style: none; }
 .mn__go span:last-child { color: var(--accent); transition: transform .25s var(--ease); }
 .mn__go:hover span:last-child { transform: translateX(4px); }
 
-@media (max-width: 999px) {
-  .mn { --dial: min(calc(100vw - 2 * var(--gutter) - 16px), 520px, calc(100svh - 310px)); }
+@media (max-width: 1199px) {
+  .mn__dial { top: calc(var(--header) + 24px + var(--dial) / 2); }
+  .mn { --dial: min(calc(100vw - 2 * var(--gutter)), 520px, calc(100svh - 300px)); }
   .mn__dial { top: calc(var(--header) + 24px + var(--dial) / 2); }
   .mn__intro { right: var(--gutter); max-width: none; bottom: calc(24px + 60px); }
   .mn__intro p { display: none; }
   .mn__read { left: var(--gutter); right: var(--gutter); bottom: 20px; grid-template-columns: auto 1fr; align-items: end; justify-items: start; text-align: left; gap: 16px; }
   .mn__brg { font-size: 2.2rem; }
   .mn__go { justify-self: end; }
-  .mn-node__label { font-size: .6875rem; --lx: -52px; --ly: 22px; } /* side labels read inside the ring */
-  .mn__num { display: none; }
+  .mn-node__label { font-size: .6875rem; }
+  .mn__num--minor, .mn__ranges, .mn__corner { display: none; }
+  .mn__num { font-size: 22px; }
 }
-@media (max-width: 999px) and (min-height: 700px) {
+@media (max-width: 1199px) and (min-height: 700px) {
   .mn__intro p { display: block; }
   .mn__intro { bottom: calc(24px + 72px); }
 }

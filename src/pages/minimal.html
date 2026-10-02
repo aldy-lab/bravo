@@ -11,13 +11,23 @@ body: home mini
 
   <div class="mn__dial" data-dial>
     <svg viewBox="0 0 1000 1000" aria-hidden="true">
-      <g data-card></g>
-      <line class="mn__vector" data-vector x1="500" y1="500" x2="500" y2="80"/>
-      <line class="mn__index" x1="500" y1="40" x2="500" y2="68"/>
-      <g class="mn__cursor" data-cursor><line x1="500" y1="62" x2="500" y2="80"/></g>
+      <defs>
+        <clipPath id="mn-frame"><rect x="10" y="10" width="980" height="980"/></clipPath>
+        <marker id="mn-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 1 L10 5 L0 9 Z"/></marker>
+      </defs>
+      <rect class="mn__frame" x="10" y="10" width="980" height="980"/>
+      <g data-card clip-path="url(#mn-frame)"></g>
+      <g class="mn__ranges"><text x="512" y="296">5</text><text x="512" y="96">10</text></g>
+      <g data-targets></g>
+      <path class="mn__index" d="M500 26 l-8 -14 h16 z"/>
+      <g class="mn__cursor" data-cursor><line x1="500" y1="86" x2="500" y2="100"/></g>
       <path class="mn__centre" d="M488 500h24M500 488v24"/>
     </svg>
     <ul class="mn__nodes" data-nodes aria-label="Sections"></ul>
+    <span class="mn__corner mn__corner--tl" aria-hidden="true">Manoeuvring board</span>
+    <span class="mn__corner mn__corner--tr" aria-hidden="true">Scale 1 : 1 · rings 1</span>
+    <span class="mn__corner mn__corner--bl" aria-hidden="true" data-cursor-read>BRG ---°</span>
+    <span class="mn__corner mn__corner--br" aria-hidden="true">Sheet BIS-001</span>
   </div>
 
   <div class="mn__intro">
