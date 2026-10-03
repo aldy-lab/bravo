@@ -60,6 +60,12 @@ def build():
             + body
             + part("footer.html").replace("{{nav}}", nav_html(meta.get("page", "")))
         )
+        # version every script and stylesheet by its content, so a browser can never pair
+        # this page with last build's cached script (a stale home.js broke the board once)
+        import hashlib
+        for asset in sorted(set(re.findall(r'(?:src|href)="((?:js|css)/[\w.-]+\.(?:js|css))"', html))):
+            v = hashlib.sha1((ROOT / asset).read_bytes()).hexdigest()[:8]
+            html = html.replace(f'"{asset}"', f'"{asset}?v={v}"')
         (ROOT / name).write_text(html)
         print("wrote", name)
 
