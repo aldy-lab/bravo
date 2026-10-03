@@ -67,8 +67,17 @@ def build():
     (ROOT / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}\n</urlset>\n'
     )
-    (ROOT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {BASE}sitemap.xml\n")
+    (ROOT / "robots.txt").write_text("User-agent: *\nDisallow: /\n")  # preview: keep it out of search
     print("wrote sitemap.xml, robots.txt")
+
+    # while in preview the page is locked behind a login: the credentials live in
+    # the untracked .lock file, never in the repo; without it the build refuses
+    lock = ROOT / ".lock"
+    if lock.exists():
+        import subprocess
+        subprocess.run(["node", str(ROOT / "tools" / "lock.mjs"), str(ROOT / "index.html"), lock.read_text().strip()], check=True)
+    else:
+        raise SystemExit("No .lock file: refusing to build an unlocked index.html (create .lock with login:password).")
 
     # retired home variants: keep their old links working
     # retired pages: keep their old links working, each to its section

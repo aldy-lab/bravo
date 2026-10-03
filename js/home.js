@@ -161,9 +161,28 @@
     if (reduced) { heading = target; layout(); if (onArrive) { const f = onArrive; onArrive = null; f(); } return; }
     run();
   };
+  /* page glide: our own eased scroll, slower and softer than the browser's
+     smooth scroll. Snapping is switched off while it runs, or the browser
+     would snap every intermediate frame. */
+  let gliding = 0;
+  const glide = (toY, ms = 1100) => {
+    const html = document.documentElement, from = scrollY, d = toY - from;
+    cancelAnimationFrame(gliding);
+    if (reduced || Math.abs(d) < 2) { window.scrollTo({ top: toY, behavior: "instant" }); return; }
+    html.style.scrollSnapType = "none";
+    const t0 = performance.now();
+    const ease2 = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const stepF = (now) => {
+      const t = Math.min(1, (now - t0) / ms);
+      window.scrollTo({ top: from + d * ease2(t), behavior: "instant" }); // CSS smooth scrolling would restart every frame
+      if (t < 1) gliding = requestAnimationFrame(stepF);
+      else { gliding = 0; html.style.scrollSnapType = ""; }
+    };
+    gliding = requestAnimationFrame(stepF);
+  };
+  const glideTo = (el) => el && glide(el.getBoundingClientRect().top + scrollY);
   const scrollTo = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    glideTo(document.getElementById(id));
     if (history.replaceState) history.replaceState(null, "", "#" + id);
   };
   const go = (n) => steer(n.brg, () => scrollTo(n.href.slice(1)));
@@ -236,21 +255,44 @@
      corner slot and stays there as the navigation. Position is a
      transform of the fixed board, interpolated by scroll. */
   const hero = $(".in-sec--hero"), slotHero = $(".in-slot-hero"), slotMini = $(".in-slot-mini");
-  let baseW = 0, placing = 0;
-  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-  const place = () => {
+  let baseW = 0, placing = 0, last2 = 0;
+  const cur = { x: 0, y: 0, w: 0 }, aim = { x: 0, y: 0, w: 0 };
+  const crossX = $(".in-cross__x"), crossY = $(".in-cross__y");
+  const ease = (t) => t * t * (3 - 2 * t); // smoothstep: soft at both ends
+  // the board follows its scroll position with a damped lag, so the start
+  // of a scroll eases it out of the hero instead of yanking it
+  const draw = () => {
+    board.style.transform = `translate(${cur.x}px, ${cur.y}px) scale(${cur.w / baseW})`;
+    const cx = cur.x + cur.w / 2, cy = cur.y + cur.w / 2;
+    // crosshair: the vertical through the centre; the horizontal only from the board's
+    // left edge outward, so it never runs through the text
+    crossY.style.transform = `translateX(${cx}px)`;
+    crossX.style.transform = `translate(${cur.x - 48}px, ${cy}px)`;
+  };
+  const place = (now) => {
     placing = 0;
     const a = slotHero.getBoundingClientRect(), b = slotMini.getBoundingClientRect();
-    if (!baseW || Math.abs(baseW - a.width) > 1) { baseW = a.width; board.style.width = baseW + "px"; }
-    const p = ease(Math.max(0, Math.min(1, scrollY / (hero.offsetHeight * 0.8))));
-    const x = a.left + (b.left - a.left) * p, y = a.top + (b.top - a.top) * p, w = a.width + (b.width - a.width) * p;
-    board.style.transform = `translate(${x}px, ${y}px) scale(${w / baseW})`;
+    if (!baseW || Math.abs(baseW - a.width) > 1) { baseW = a.width; board.style.width = baseW + "px"; if (!cur.w) Object.assign(cur, { x: a.left, y: a.top, w: a.width }); }
+    const p = ease(Math.max(0, Math.min(1, scrollY / (hero.offsetHeight * 0.9))));
+    // from where the slot sits with the page at the top, so the board glides straight to the
+    // corner instead of first riding up with the hero
+    const ay = a.top + scrollY;
+    aim.x = a.left + (b.left - a.left) * p; aim.y = ay + (b.top - ay) * p; aim.w = a.width + (b.width - a.width) * p;
     wrap.classList.toggle("is-docked", p > 0.98);
-    // the page-wide crosshair passes through the centre of the board
-    wrap.style.setProperty("--in-cx", x + w / 2 + "px");
-    wrap.style.setProperty("--in-cy", y + w / 2 + "px");
+    const dt = Math.min(0.05, ((now || performance.now()) - (last2 || now || performance.now())) / 1000); last2 = now || 0;
+    const k = reduced ? 1 : 1 - Math.exp(-dt * 9);
+    let moving = false;
+    ["x", "y", "w"].forEach((q) => { cur[q] += (aim[q] - cur[q]) * (dt ? k : 1); if (Math.abs(aim[q] - cur[q]) > 0.3) moving = true; else cur[q] = aim[q]; });
+    draw();
+    if (moving) placing = requestAnimationFrame(place); else last2 = 0;
   };
   const schedule = () => { if (!placing) placing = requestAnimationFrame(place); };
+  // the crew holds still while the page moves: the scene repaints less and the scroll stays smooth
+  let still = 0;
+  addEventListener("scroll", () => {
+    wrap.classList.add("is-scrolling");
+    clearTimeout(still); still = setTimeout(() => wrap.classList.remove("is-scrolling"), 160);
+  }, { passive: true });
   addEventListener("scroll", schedule, { passive: true });
   addEventListener("resize", schedule);
   new ResizeObserver(schedule).observe(document.documentElement);
@@ -296,8 +338,17 @@
     wheelAcc = 0;
     if (!next || next === cur) return;
     wheelLock = performance.now() + (reduced ? 300 : 850);
-    next.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    glideTo(next);
   }, { passive: false });
+
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a || a.closest("[data-labels]") || e.defaultPrevented) return;
+    const el = document.getElementById(a.getAttribute("href").slice(1));
+    if (!el) return;
+    e.preventDefault();
+    glideTo(el);
+  });
 
   layout();
   booted = true;

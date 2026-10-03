@@ -506,8 +506,8 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .in-wrap { --io: cubic-bezier(0.77, 0, 0.175, 1); --out: cubic-bezier(0.23, 1, 0.32, 1); }
 .in-cross::before, .in-cross::after { content: none; }
 .in-cross__x, .in-cross__y { position: absolute; background: var(--ik-3); transition: background-color .6s; }
-.in-cross__x { left: 0; right: 0; top: var(--in-cy, 50%); height: 1px; }
-.in-cross__y { top: 0; bottom: 0; left: var(--in-cx, 70%); width: 1px; }
+.in-cross__x { left: 0; top: 0; width: 100vw; height: 1px; }
+.in-cross__y { top: 0; bottom: 0; left: 0; width: 1px; }
 
 .in-hdg { position: absolute; right: 0; top: -2px; font: 500 .6875rem/1 var(--f-text); letter-spacing: .14em; color: var(--ik-2); }
 .in-hdg b { font: 300 1.5rem/1 var(--f-display); font-stretch: 105%; letter-spacing: 0; color: var(--ik); font-variant-numeric: tabular-nums; margin-left: 6px; }
@@ -579,8 +579,7 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 /* ── Variant E: the assembly scene behind the page ───── */
 .in-scene {
   position: absolute; left: 0; right: 0; bottom: 0; height: 46%; z-index: -1; pointer-events: none;
-  -webkit-mask-image: linear-gradient(to top, #000 62%, transparent);
-  mask-image: linear-gradient(to top, #000 62%, transparent);
+  contain: strict;
 }
 .in-scene svg { width: 100%; height: 100%; overflow: visible; }
 .in-scene svg * { vector-effect: non-scaling-stroke; }
@@ -762,3 +761,6 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 @media (hover: hover) and (pointer: fine) { .in-mark:hover .in-bulb__rays { opacity: .6; transform: none; } }
 /* the drawing is a plain sheet: no picture behind it */
 [data-mode="drawing"] .ind .in-bg { display: none; }
+/* while the page moves the crew holds still: less repaint under the scroll */
+.is-scrolling .in-scene * { animation-play-state: paused !important; }
+.in-board { contain: layout style; }
