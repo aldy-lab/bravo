@@ -430,9 +430,22 @@
   /* show the layer for the section in view; the others pause */
   const layers = [...svg.querySelectorAll(".sc-layer")];
   const wrapEl = host.closest(".in-wrap");
+  /* phones: no room for the whole yard, so each screen gets a close-up —
+     a camera on one worker (and whoever is beside him). x is where he
+     stands, h how much height the shot takes in. */
+  const SHOT = { 0: { x: 434, h: 200 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 640, h: 210 } };
+  const STRIP = 150; // px
+  const phone = () => innerWidth < 1100;
+  const aim = () => {
+    if (!phone()) { svg.setAttribute("viewBox", "0 0 1600 420"); return; }
+    const st = (wrapEl && wrapEl.dataset.step) || "0", shot = SHOT[st] || SHOT[0];
+    const w = shot.h * (host.clientWidth / STRIP);
+    svg.setAttribute("viewBox", `${(shot.x - w * 0.3).toFixed(1)} ${420 - shot.h} ${w.toFixed(1)} ${shot.h}`);
+  };
   const show = () => {
     const st = (wrapEl && wrapEl.dataset.step) || "0";
     layers.forEach((l) => l.classList.toggle("is-on", l.dataset.for === st));
+    aim();
   };
   if (wrapEl) new MutationObserver(show).observe(wrapEl, { attributes: true, attributeFilter: ["data-step"] });
   show();
@@ -449,14 +462,16 @@
   const fit = () => {
     if (!wrap) return;
     const svgEl = host.querySelector("svg");
-    if (innerWidth < 1100) {
-      // phones: a fixed strip, cropped round the middle of the drawing
-      svgEl.setAttribute("preserveAspectRatio", "xMidYMax slice");
-      host.style.height = "150px";
-      wrap.style.setProperty("--scene-h", "100px");
+    if (phone()) {
+      // phones: a strip with a close-up of one worker (see SHOT)
+      svgEl.setAttribute("preserveAspectRatio", "xMidYMax meet");
+      host.style.height = STRIP + "px";
+      wrap.style.setProperty("--scene-h", STRIP - 10 + "px");
       wrap.style.removeProperty("--h1-fit");
+      aim();
       return;
     }
+    aim();
     svgEl.setAttribute("preserveAspectRatio", "xMidYMax meet");
     const k = Math.min(innerWidth / 1600, 1.15);
     host.style.height = 420 * k + "px";

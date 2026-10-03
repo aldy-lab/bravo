@@ -488,8 +488,8 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
   .in-slot-hero { grid-row: 2; width: min(calc(100vw - 2 * var(--gutter)), 520px, calc(100svh - var(--head) - var(--scene-h, 100px) - 300px)); min-width: 200px; }
   .in-paths { grid-row: 3; justify-self: stretch; max-width: none; }
   .in-path { min-height: 54px; padding: 10px 12px; }
-  .in-slot-mini { top: auto; bottom: calc(var(--scene-h, 100px) + 10px); width: 112px; }
-  .in-sec { align-content: start; padding: calc(var(--head) + 20px) var(--gutter) calc(var(--scene-h, 100px) + 132px); }
+  .in-slot-mini { top: auto; bottom: 22px; width: 108px; } /* sits in the crew strip, right of the worker */
+  .in-sec { align-content: start; padding: calc(var(--head) + 20px) var(--gutter) calc(var(--scene-h, 100px) + 20px); }
   .in-col { max-width: none; }
   .in-list li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .in-jobs button { grid-template-columns: 2rem minmax(0, 1fr); row-gap: 2px; }
@@ -766,3 +766,11 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .in-board { contain: layout style; }
 /* the sign is a solid board: the crosshair passes behind it, not through its words */
 .sc-sign { fill: var(--pp); }
+@media (max-width: 1099px) {
+  /* docked in the crew strip, the board gets a solid face so the scene does not show through it */
+  .is-docked .in-board::before { content: ""; position: absolute; inset: 2%; border-radius: 50%; background: var(--pp); }
+}
+@media (max-width: 1099px) and (max-height: 620px) {
+  .in-list span { display: none; }
+  .in-list li { padding: 9px 0; }
+}
