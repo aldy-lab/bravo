@@ -84,58 +84,145 @@
     el("text", { x: 110 + i * 112, y: 186, class: `sc-step sc-step--${i + 1}` }, steps).textContent = `0${i + 1} ${t.toUpperCase()}`;
   });
 
-  /* ── people ───────────────────────────────────────────── */
-  const person = (x, y, { armL = 12, armR = -12, legL = 6, legR = -6, cls = "" } = {}, parent = crew) => {
+  /* ── people ─────────────────────────────────────────────
+     Solid silhouettes with knees and elbows. Every joint is a group whose
+     origin is the joint, so rotate() turns the limb about it. Poses are
+     tracks on the same 30 s timeline as the story, generated below. */
+  const person = (x, y, { armL = 8, armR = -8, cls = "" } = {}, parent = crew) => {
     const g = el("g", { class: "sc-man " + cls, transform: `translate(${x} ${y})` }, parent);
-    const limb = (jx, jy, len, ang, name) => {
-      const j = el("g", { transform: `translate(${jx} ${jy})` }, g);
-      const l = el("g", { class: name, style: `--a:${ang}deg` }, j);
-      el("line", { x1: 0, y1: 0, x2: 0, y2: len }, l);
-      return l;
+    const bob = el("g", { class: "sc-bob sc-tl" }, g);
+    const joint = (parentEl, jx, jy, ang, name) => {
+      const j = el("g", { transform: `translate(${jx} ${jy})` }, parentEl);
+      return el("g", { class: name + " sc-tl", style: `--a:${ang}deg` }, j);
     };
-    const back = limb(0, -48, 21, armL, "sc-arm sc-arm--l");
-    limb(-2, -25, 25, legL, "sc-leg sc-leg--l");
-    limb(2, -25, 25, legR, "sc-leg sc-leg--r");
-    el("rect", { x: -7, y: -54, width: 14, height: 31, rx: 4, class: "sc-body" }, g);
-    el("line", { x1: -7, y1: -40, x2: 7, y2: -40, class: "sc-band" }, g);
-    el("line", { x1: -7, y1: -33, x2: 7, y2: -33, class: "sc-band" }, g);
-    const front = limb(0, -48, 21, armR, "sc-arm sc-arm--r");
-    el("circle", { cx: 0, cy: -61, r: 6, class: "sc-head" }, g);
-    el("path", { d: "M-7.5 -62 A7.5 7.5 0 0 1 7.5 -62 Z M-10 -62 H10", class: "sc-helmet" }, g);
-    return { g, aL: back, aR: front };
+    const seg = (parentEl, len) => el("line", { x1: 0, y1: 0, x2: 0, y2: len }, parentEl);
+    const arm = (side, ang) => {
+      const up = joint(bob, 0, -48, ang, `sc-arm sc-arm--${side}`); seg(up, 11);
+      const fore = joint(up, 0, 11, 0, `sc-fore sc-arm--${side}`); seg(fore, 11);
+      return { up, fore };
+    };
+    const leg = (side, hx) => {
+      const th = joint(bob, hx, -25, 0, `sc-leg sc-leg--${side}`); seg(th, 13);
+      const sh = joint(th, 0, 13, 0, `sc-shin sc-leg--${side}`); seg(sh, 13);
+      return { th, sh };
+    };
+    const aL = arm("l", armL);
+    const lL = leg("l", -2), lR = leg("r", 2);
+    el("rect", { x: -7, y: -54, width: 14, height: 31, rx: 4, class: "sc-body" }, bob);
+    el("line", { x1: -7, y1: -40, x2: 7, y2: -40, class: "sc-band" }, bob);
+    el("line", { x1: -7, y1: -33, x2: 7, y2: -33, class: "sc-band" }, bob);
+    const aR = arm("r", armR);
+    const head = joint(bob, 0, -54, 0, "sc-headg");
+    el("circle", { cx: 0, cy: -7, r: 6, class: "sc-head" }, head);
+    el("path", { d: "M-7.5 -8 A7.5 7.5 0 0 1 7.5 -8 Z M-10 -8 H10", class: "sc-helmet" }, head);
+    return { g, bob, head, aL, aR, lL, lR };
+  };
+
+  /* tracks: [percent, value] pairs → @keyframes, assigned by animation-name */
+  const sheet = [];
+  let uid = 0;
+  const track = (node, kind, frames) => {
+    const name = `sc-k${uid++}`;
+    const fmt = kind === "r" ? (v) => `transform: rotate(${v}deg)` : kind === "y" ? (v) => `transform: translateY(${v}px)` : (v) => `opacity: ${v}`;
+    const seen = new Map();
+    frames.forEach(([p, v]) => seen.set(Math.max(0, Math.min(100, +p.toFixed(2))), v));
+    if (!seen.has(0)) seen.set(0, frames[0][1]);
+    if (!seen.has(100)) seen.set(100, seen.get(0));
+    const body = [...seen.entries()].sort((a, b) => a[0] - b[0]).map(([p, v]) => `${p}% { ${fmt(v)}; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }`).join(" ");
+    sheet.push(`@keyframes ${name} { ${body} }`);
+    node.style.animationName = name;
+    node.classList.add("sc-tl");
+  };
+  const merge = (...lists) => lists.flat();
+  const hold = (a, b, v) => [[a, v], [b, v]];
+
+  /* a walk: stride every 0.75 % (0.225 s), knee bending on the back leg, body
+     rising as the legs pass; dir +1 walks left, -1 walks right */
+  const walk = (a, b, dir, phase, armsSwing) => {
+    const out = { thL: [], shL: [], thR: [], shR: [], bob: [], uaL: [], faL: [], uaR: [], faR: [] };
+    let i = phase;
+    for (let t = a; t <= b - 0.75; t += 0.75, i++) {
+      const s = i % 2 ? 1 : -1; // which leg leads
+      const m = t + 0.375;
+      out.thL.push([t, 20 * s * dir], [m, 0]); out.thR.push([t, -20 * s * dir], [m, 0]);
+      out.shL.push([t, s < 0 ? -26 * dir : 0], [m, -34 * dir * (s > 0 ? 1 : 0)]);
+      out.shR.push([t, s > 0 ? -26 * dir : 0], [m, -34 * dir * (s < 0 ? 1 : 0)]);
+      out.bob.push([t, 0], [m, -2.4]);
+      if (armsSwing) {
+        out.uaL.push([t, 8 - 18 * s * dir]); out.uaR.push([t, -8 + 18 * s * dir]);
+        out.faL.push([t, 18 * dir]); out.faR.push([t, 18 * dir]);
+      }
+    }
+    Object.values(out).forEach((l) => l.length && l.push([b, 0]));
+    if (armsSwing) { out.uaL[out.uaL.length - 1] = [b, 8]; out.uaR[out.uaR.length - 1] = [b, -8]; }
+    return out;
   };
 
   // welder on the scaffold, torch to the block's corner seam
   const wx = sx + 20;
-  const w = person(wx, PL, { armL: 52, armR: 80, legL: 10, legR: -6, cls: "sc-welder" });
-  el("line", { x1: 0, y1: 20, x2: 0, y2: 28, class: "sc-tool" }, w.aR);
-  const tip = [wx - 28 * Math.sin(80 * Math.PI / 180), PL - 48 + 28 * Math.cos(80 * Math.PI / 180)];
+  const w = person(wx, PL, { armL: 30, armR: 20, cls: "sc-welder" });
+  el("line", { x1: 0, y1: 11, x2: 0, y2: 18, class: "sc-tool" }, w.aR.fore);
+  const visor = el("rect", { x: -6.5, y: -12, width: 13, height: 9, rx: 2, class: "sc-visor" }, w.head);
+  const tip = [wx - 29 * Math.sin(80 * Math.PI / 180), PL - 48 + 29 * Math.cos(80 * Math.PI / 180)];
   const sparks = el("g", { class: "sc-sparks", transform: `translate(${tip[0].toFixed(1)} ${tip[1].toFixed(1)})` }, crew);
   const sparkWin = el("g", { class: "sc-weldwin" }, sparks);
   for (let i = 0; i < 10; i++) el("line", { x1: 0, y1: 0, x2: 6, y2: 0, class: "sc-spark", style: `--r:${-160 + i * 20}deg; --d:${(i * 0.11).toFixed(2)}s` }, sparkWin);
   el("circle", { cx: 0, cy: 0, r: 4, class: "sc-glow" }, sparkWin);
+  {
+    const jit = []; for (let t = 76; t < 94; t += 0.6) jit.push([t, 78 + (Math.round(t / 0.6) % 2 ? 4 : 0)]);
+    track(w.aR.up, "r", merge(hold(0, 72, 20), [[75, 80]], jit, [[94, 80], [96.5, 20]]));
+    track(w.aR.fore, "r", merge(hold(0, 72, 14), [[75, 0], [94, 0], [96.5, 14]]));
+    track(w.aL.up, "r", merge(hold(0, 72, 30), [[75, 58], [94, 58], [96.5, 30]]));
+    track(w.aL.fore, "r", merge(hold(0, 72, -40), [[75, -10], [94, -10], [96.5, -40]]));
+    track(w.head, "r", [[0, 0], [8, 0], [12, -14], [30, -14], [36, 0], [42, 0], [46, 14], [60, 14], [64, -10], [70, -10], [73, 0], [96, 0], [100, 0]]);
+    const breathe = []; for (let t = 0; t < 72; t += 4) breathe.push([t, 0], [t + 2, -0.8]);
+    track(w.bob, "y", merge(breathe, [[72, 0], [75, 2.5]], (() => { const o = []; for (let t = 76; t < 94; t += 1.2) o.push([t, 2.5], [t + 0.6, 3]); return o; })(), [[94, 2.5], [96.5, 0]]));
+    track(visor, "o", [[0, 0], [73.5, 0], [75, 1], [94, 1], [95.5, 0], [100, 0]]);
+  }
 
-  // rigger outside the right leg, guiding the lift
-  const rig = person(c2 + 40, G, { armL: 150, armR: 10, cls: "sc-rigger" });
+  // rigger outside the right leg: hand signals to the crane driver
+  const rig = person(c2 + 40, G, { cls: "sc-rigger" });
+  {
+    const wave = []; for (let t = 46; t < 56; t += 1.25) wave.push([t, 10], [t + 0.62, -45]);
+    const lower = []; for (let t = 66; t < 73.5; t += 1.25) lower.push([t, 20], [t + 0.62, 40]);
+    const lowerR = lower.map(([t, v]) => [t, -v]);
+    track(rig.aL.up, "r", merge(hold(0, 40, 8), [[43, 150]], [[56, 150], [58, 95], [65, 95], [66.5, 75], [73.5, 75], [75, 8], [100, 8]]));
+    track(rig.aL.fore, "r", merge(hold(0, 43, 0), wave, [[56, 0], [65, 0]], lower, [[73.5, 0], [100, 0]]));
+    track(rig.aR.up, "r", merge(hold(0, 65, -8), [[66.5, -75], [73.5, -75], [75, -150], [79, -150], [81, -8], [100, -8]]));
+    track(rig.aR.fore, "r", merge(hold(0, 66, 0), lowerR, [[73.5, 0], [75, -30], [79, -30], [81, 0], [100, 0]]));
+    track(rig.head, "r", [[0, 0], [6, 12], [30, 12], [36, 0], [40, 0], [43, -10], [72, -10], [76, 0], [100, 0]]);
+    const breathe = []; for (let t = 0; t < 100; t += 4) breathe.push([t, 0], [t + 2, -0.8]);
+    track(rig.bob, "y", breathe);
+  }
 
   // the two fitters: start at the stack, a beam end each
   const carry = el("g", { class: "sc-carry" }, crew);
-  const pair = [AX - 50, AX + 50].map((x, i) => person(x, G, { armL: 172, armR: 188, cls: "sc-walker" + (i ? " sc-walker--b" : "") }, carry));
-
-  /* strides: a swing every 0.45 s (1.5 % of 30 s) inside the two walks, still otherwise */
-  const stride = (name, phase) => {
-    const k = ["0% { transform: rotate(calc(var(--a) + 0deg)); }"];
-    [[4, 32], [40, 68]].forEach(([a, b]) => {
-      k.push(`${a}% { transform: rotate(calc(var(--a) + 0deg)); }`);
-      let i = 0;
-      for (let t = a + 0.75; t < b - 0.4; t += 0.75, i++) k.push(`${t.toFixed(2)}% { transform: rotate(calc(var(--a) + ${((i + phase) % 2 ? 18 : -18)}deg)); }`);
-      k.push(`${b}% { transform: rotate(calc(var(--a) + 0deg)); }`);
+  const pair = [AX - 50, AX + 50].map((x, i) => person(x, G, { cls: "sc-walker" + (i ? " sc-walker--b" : "") }, carry));
+  pair.forEach((m, i) => {
+    const go = walk(4, 32, 1, i, false), back = walk(40, 68, -1, i + 1, true);
+    const squat = (a, b) => ({ bob: [[a, 0], [a + 1, 7], [b - 1, 7], [b, 0]], thL: [[a, 0], [a + 1, 28], [b - 1, 28], [b, 0]], thR: [[a, 0], [a + 1, -28], [b - 1, -28], [b, 0]], shL: [[a, 0], [a + 1, -56], [b - 1, -56], [b, 0]], shR: [[a, 0], [a + 1, 56], [b - 1, 56], [b, 0]] });
+    const s1 = squat(0, 3.2), s2 = squat(33, 37.5);
+    track(m.bob, "y", merge(s1.bob, [[4, 0]], go.bob, [[32, 0]], s2.bob, [[40, 0]], back.bob, (() => { const o = []; for (let t = 69; t < 98; t += 4) o.push([t, 0], [t + 2, -0.8]); return o; })(), [[100, 0]]));
+    ["L", "R"].forEach((S) => {
+      track(m[`l${S}`].th, "r", merge(s1[`th${S}`], [[4, 0]], go[`th${S}`], [[32, 0]], s2[`th${S}`], [[40, 0]], back[`th${S}`], [[68, 0], [100, 0]]));
+      track(m[`l${S}`].sh, "r", merge(s1[`sh${S}`], [[4, 0]], go[`sh${S}`], [[32, 0]], s2[`sh${S}`], [[40, 0]], back[`sh${S}`], [[68, 0], [100, 0]]));
     });
-    k.push("100% { transform: rotate(calc(var(--a) + 0deg)); }");
-    return `@keyframes ${name} { ${k.join(" ")} }`;
-  };
+    // arms: reach down in the squat, overhead while carrying, down to set the beam,
+    // swinging on the way back, then each his own idle at the stack
+    const idleA = { uaL: [[70, 8], [72, 38], [95, 38], [97, 8]], faL: [[70, 0], [72, -80], [95, -80], [97, 0]], uaR: [[70, -8], [72, -38], [95, -38], [97, -8]], faR: [[70, 0], [72, 80], [95, 80], [97, 0]] };
+    const wipe = []; for (let t = 76; t < 80; t += 1) wipe.push([t, -50], [t + 0.5, -80]);
+    const idleB = { uaL: [[70, 8], [97, 8]], faL: [[70, 0], [97, 0]], uaR: [[70, -8], [73, -150], [80, -150], [82, -8], [97, -8]], faR: [[70, 0], [73, -50], ...wipe, [80, -50], [82, 0], [97, 0]] };
+    const idle = i ? idleB : idleA;
+    const up = { L: 172, R: 188 }, down = { L: 8, R: -8 }, reach = { L: 22, R: -22 };
+    ["L", "R"].forEach((S) => {
+      track(m[`a${S}`].up, "r", merge([[0, down[S]], [1, reach[S]], [3.2, up[S]], [32, up[S]], [34, 100 * (S === "L" ? 1 : -1)], [36.5, reach[S]], [38, down[S]], [40, down[S]]], back[`ua${S}`], [[68, down[S]]], idle[`ua${S}`], [[100, down[S]]]));
+      track(m[`a${S}`].fore, "r", merge([[0, 0], [32, 0], [34, (S === "L" ? 30 : -30)], [36.5, 0], [40, 0]], back[`fa${S}`], [[68, 0]], idle[`fa${S}`], [[100, 0]]));
+    });
+    track(m.head, "r", i ? [[0, 0], [84, 0], [86, 12], [89, 12], [91, -12], [94, -12], [96, 0], [100, 0]] : [[0, 0], [100, 0]]);
+  });
+
   const css = document.createElement("style");
-  css.textContent = stride("sc-stride-a", 0) + "\n" + stride("sc-stride-b", 1);
+  css.textContent = sheet.join("\n");
   document.head.append(css);
 
   /* ── interaction (egg.html only) ────────────────────────

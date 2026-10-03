@@ -1130,7 +1130,7 @@ ol, ul { list-style: none; }
 
 /* ── the story: one 30 s timeline ─────────────────────── */
 .ind--egg .in-scene { --T: 30s; --io: cubic-bezier(0.77, 0, 0.175, 1); }
-.ind--egg .sc-carry, .ind--egg .sc-beam--carried, .ind--egg .sc-trolley, .ind--egg .sc-hook, .ind--egg .sc-cable, .ind--egg .sc-beam--hung, .ind--egg .sc-weldwin, .ind--egg .sc-step, .ind--egg .sc-walker .sc-arm, .ind--egg .sc-walker .sc-leg {
+.ind--egg .sc-carry, .ind--egg .sc-beam--carried, .ind--egg .sc-trolley, .ind--egg .sc-hook, .ind--egg .sc-cable, .ind--egg .sc-beam--hung, .ind--egg .sc-weldwin, .ind--egg .sc-step, .ind--egg .sc-tl {
   animation-duration: var(--T); animation-iteration-count: infinite; animation-timing-function: linear;
 }
 
@@ -1151,15 +1151,6 @@ ol, ul { list-style: none; }
   99.8% { transform: translate(0, 0); }
   100% { transform: translate(0, 0); opacity: 1; }
 }
-.ind--egg .sc-walker .sc-arm--l { animation-name: sc-arm-l; }
-.ind--egg .sc-walker .sc-arm--r { animation-name: sc-arm-r; }
-@keyframes sc-arm-l { 0% { transform: rotate(8deg); animation-timing-function: var(--io); } 4%, 32% { transform: rotate(172deg); animation-timing-function: var(--io); } 37%, 100% { transform: rotate(8deg); } }
-@keyframes sc-arm-r { 0% { transform: rotate(-8deg); animation-timing-function: var(--io); } 4%, 32% { transform: rotate(188deg); animation-timing-function: var(--io); } 37%, 100% { transform: rotate(-8deg); } }
-/* legs: keyframes generated in in-scene.js, a stride every 0.45 s inside the two walks */
-.ind--egg .sc-walker .sc-leg--l { animation-name: sc-stride-a; }
-.ind--egg .sc-walker .sc-leg--r { animation-name: sc-stride-b; }
-.ind--egg .sc-walker--b .sc-leg--l { animation-name: sc-stride-b; }
-.ind--egg .sc-walker--b .sc-leg--r { animation-name: sc-stride-a; }
 
 /* 02 lift and 03 set: trolley over, hook down, up, back over the block, down, release */
 .ind--egg .sc-trolley { animation-name: sc-trolley; }
@@ -1197,10 +1188,6 @@ ol, ul { list-style: none; }
 @keyframes sc-glow { 50% { opacity: .35; } }
 .ind--egg .sc-spark { stroke-width: 1.5; transform: rotate(var(--r)); opacity: 0; animation: sc-spark .7s cubic-bezier(0.23, 1, 0.32, 1) infinite; animation-delay: var(--d); }
 @keyframes sc-spark { 0% { opacity: 1; transform: rotate(var(--r)) translateX(2px); } 100% { opacity: 0; transform: rotate(var(--r)) translateX(24px); } }
-.ind--egg .sc-welder .sc-arm--r { animation: sc-weld 3.2s ease-in-out infinite alternate; }
-@keyframes sc-weld { from { transform: rotate(calc(var(--a) - 6deg)); } to { transform: rotate(calc(var(--a) + 6deg)); } }
-.ind--egg .sc-rigger .sc-arm--l { animation: sc-wave 1.8s ease-in-out infinite alternate; }
-@keyframes sc-wave { from { transform: rotate(calc(var(--a) - 14deg)); } to { transform: rotate(calc(var(--a) + 8deg)); } }
 
 /* the story strip lights the step in progress */
 .ind--egg .sc-step--1 { animation-name: sc-s1; } .ind--egg .sc-step--2 { animation-name: sc-s2; } .ind--egg .sc-step--3 { animation-name: sc-s3; } .ind--egg .sc-step--4 { animation-name: sc-s4; }
@@ -1299,6 +1286,8 @@ ol, ul { list-style: none; }
   [data-mode="drawing"] .ind--egg .in-board { --b: min(calc(100vw - 2 * var(--gutter)), 540px, calc(100svh - 104px - var(--h1) * 2.7 - 204px)); }
 }
 @media (prefers-reduced-motion: reduce) { .ind--egg :is(.sc-man, .sc-sparks) { translate: none; transition: opacity .3s; } }
+
+.sc-visor { fill: var(--ik); stroke: none; opacity: 0; }
 
 /* ── Variant F: the crew answers back (drawing mode only) ── */
 .sc-call { visibility: hidden; opacity: 0; transition: opacity .4s cubic-bezier(0.23, 1, 0.32, 1), visibility 0s .4s; }
