@@ -51,7 +51,6 @@ const CONFIG = {
   $$("[data-year]").forEach((y) => { y.textContent = new Date().getFullYear(); });
 
   /* ── drawing mode (the "B" button) ───────────────────────── */
-  const egg = $(".egg");
   const setMode = (drawing) => {
     root.classList.remove("is-switching", "is-switching-back");
     void root.offsetWidth; // restart the scan animation
@@ -59,11 +58,13 @@ const CONFIG = {
     clearTimeout(setMode.t);
     setMode.t = setTimeout(() => root.classList.remove("is-switching", "is-switching-back"), 1300);
     if (drawing) root.dataset.mode = "drawing"; else delete root.dataset.mode;
-    egg.setAttribute("aria-pressed", String(drawing));
+    $$(".egg").forEach((b) => b.setAttribute("aria-pressed", String(drawing)));
     try { localStorage.setItem("bravo-mode", drawing ? "drawing" : "photo"); } catch (e) { /* private mode */ }
   };
-  egg.setAttribute("aria-pressed", String(root.dataset.mode === "drawing"));
-  egg.addEventListener("click", () => setMode(root.dataset.mode !== "drawing"));
+  $$(".egg").forEach((b) => {
+    b.setAttribute("aria-pressed", String(root.dataset.mode === "drawing"));
+    b.addEventListener("click", () => setMode(root.dataset.mode !== "drawing"));
+  });
 
   /* ── header: mobile menu ─────────────────────────────────── */
   const top = $("[data-top]");
