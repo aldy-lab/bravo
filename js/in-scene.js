@@ -433,7 +433,7 @@
   /* phones: no room for the whole yard, so each screen gets a close-up —
      a camera on one worker (and whoever is beside him). x is where he
      stands, h how much height the shot takes in. */
-  const SHOT = { 0: { x: 434, h: 200 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 640, h: 210 } };
+  const SHOT = { 0: { x: 760, h: 200 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 640, h: 210 } };
   const STRIP = 150; // px
   const phone = () => innerWidth < 1100;
   const aim = () => {

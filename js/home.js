@@ -264,8 +264,19 @@
     crossY.style.transform = `translateX(${cx}px)`;
     crossX.style.transform = `translate(${cur.x - 48}px, ${cy}px)`;
   };
+  // phones: the board lives in the hero only, inside its slot, and scrolls with the
+  // page natively — no per-frame flight, no docking, no crosshair
+  const stage = board.parentNode;
+  const phoneM = matchMedia("(max-width: 1099px)");
+  const mount = () => {
+    if (phoneM.matches && board.parentNode !== slotHero) { slotHero.append(board); board.style.transform = ""; board.style.width = ""; baseW = 0; }
+    if (!phoneM.matches && board.parentNode !== stage) { stage.append(board); baseW = 0; cur.w = 0; }
+  };
+  phoneM.addEventListener("change", () => { mount(); schedule(); });
   const place = (now) => {
     placing = 0;
+    mount();
+    if (phoneM.matches) { wrap.classList.remove("is-docked"); return; }
     const a = slotHero.getBoundingClientRect(), b = slotMini.getBoundingClientRect();
     if (!baseW || Math.abs(baseW - a.width) > 1) { baseW = a.width; board.style.width = baseW + "px"; if (!cur.w) Object.assign(cur, { x: a.left, y: a.top, w: a.width }); }
     const p = ease(Math.max(0, Math.min(1, scrollY / (hero.offsetHeight * 0.9))));
@@ -285,6 +296,7 @@
   // the crew holds still while the page moves: the scene repaints less and the scroll stays smooth
   let still = 0;
   addEventListener("scroll", () => {
+    if (phoneM.matches) return;
     wrap.classList.add("is-scrolling");
     clearTimeout(still); still = setTimeout(() => wrap.classList.remove("is-scrolling"), 160);
   }, { passive: true });

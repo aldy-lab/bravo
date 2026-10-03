@@ -774,3 +774,16 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
   .in-list span { display: none; }
   .in-list li { padding: 9px 0; }
 }
+
+/* ── phones: the board only on the hero, large, scrolling with the page ── */
+@media (max-width: 1099px) {
+  .in-cross, .in-slot-mini { display: none; }
+  .in-sec--hero { height: 100svh; min-height: 520px; grid-template-rows: auto minmax(0, 1fr) auto; padding-bottom: calc(var(--scene-h, 140px) * .58); } /* the buttons sit over the empty top of the crew strip */
+  .in-slot-hero { visibility: visible; position: relative; height: 100%; width: 100%; min-width: 0; aspect-ratio: auto; container-type: size; }
+  .in-slot-hero .in-board { position: absolute; inset: 0; margin: auto; width: min(100cqw, 100cqh) !important; height: min(100cqw, 100cqh); transform: none !important; z-index: 1; touch-action: pan-y; will-change: auto; }
+  .in-slot-hero .in-node__t { font-size: 30px; letter-spacing: .2em; }
+  .in-slot-hero .in-num { font-size: 26px; }
+  .in-hdg { display: none; }
+  /* sections: nothing docked any more, the text can use the space */
+  .in-sec:not(.in-sec--hero) { padding-bottom: calc(var(--scene-h, 140px) + 16px); }
+}
