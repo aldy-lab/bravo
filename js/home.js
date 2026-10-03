@@ -1,4 +1,4 @@
-/* Hero variant E: the home page laid out like a page of the Bravo brand
+/* The home page: laid out like a page of the Bravo brand
    book — running header, a staggered solid-and-outline headline,
    the radial-tick graphic element as the board, the emblem's isometric
    layers as targets, and the drawing-mode egg inking the board's dimensions.

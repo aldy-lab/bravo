@@ -26,7 +26,7 @@ NAV = [
     ("contact.html", "contact", "Contact", "270"),
 ]
 PAGES = ["index.html"] + [n[0] for n in NAV]
-VARIANTS = ["plot.html", "minimal.html", "te.html", "industrial.html", "egg.html"]  # alternative heroes: built, but kept out of the sitemap and search
+VARIANTS = []  # alternative heroes: built, but kept out of the sitemap and search
 
 
 def part(name):
@@ -69,6 +69,14 @@ def build():
     )
     (ROOT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {BASE}sitemap.xml\n")
     print("wrote sitemap.xml, robots.txt")
+
+    # retired home variants: keep their old links working
+    for old in ["industrial.html", "egg.html", "plot.html", "minimal.html", "te.html"]:
+        (ROOT / old).write_text(
+            '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
+            f'<link rel="canonical" href="{BASE}"><meta http-equiv="refresh" content="0; url=./">'
+            '<title>Bravo Integrated Solutions</title><a href="./">Bravo Integrated Solutions</a>\n'
+        )
 
 
 if __name__ == "__main__":
