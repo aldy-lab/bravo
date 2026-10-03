@@ -356,7 +356,7 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 /* running header */
 .in-head {
   position: absolute; left: var(--gutter); right: var(--gutter); top: 0; z-index: 4; pointer-events: auto;
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: clamp(16px, 2.5vw, 40px);
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: clamp(16px, 2.5vw, 40px);
   height: var(--head); font: 400 .8125rem/1 var(--f-text); color: var(--ik-2);
 }
 .in-logo { display: inline-flex; min-height: 44px; align-items: center; color: var(--ik); }

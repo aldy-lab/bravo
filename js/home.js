@@ -114,13 +114,8 @@
   const shortest = (from, to) => from + (((to - from) % 360) + 540) % 360 - 180;
   const nearest = (h) => Math.round(h / STEP) * STEP;
   const read = { title: $('[data-r="title"]'), text: $('[data-r="text"]'), href: $('[data-r="href"]') };
-  const page = $("[data-page]");
   let booted = false;
   const hdg = $("[data-hdg]");
-  const roll = (node) => {
-    if (reduced || !node.animate) return;
-    node.animate([{ transform: "translateY(70%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 420, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
-  };
 
   function layout() {
     card.setAttribute("transform", `rotate(${-heading} ${C} ${C})`);
@@ -299,20 +294,14 @@
   place();
 
   /* ── the section in view sets the step: board heading, scene, counter ── */
-  const NAMES = ["Bravo", "Services", "Projects", "Careers", "Contact", "Bravo"];
-  const pageName = $("[data-page-name]");
   let step = 0;
   const setStep = (n) => {
     if (n === step) return;
     step = n;
     wrap.dataset.step = n;
     const sec = $(`.in-sec[data-step="${n}"]`);
-    page.textContent = sec && sec.dataset.brg ? brg3(+sec.dataset.brg) : "—";
-    pageName.textContent = NAMES[n];
-    if (booted) { roll(page); roll(pageName); }
     if (sec && sec.dataset.brg && !dragging) steer(+sec.dataset.brg);
   };
-  page.textContent = "—";
   const io = new IntersectionObserver((entries) => {
     entries.forEach((en) => { if (en.isIntersecting) setStep(+en.target.dataset.step); });
   }, { rootMargin: "-45% 0px -45% 0px" });
