@@ -325,7 +325,8 @@
   /* 03 CAREERS — new crew drops in: parachutes land, everyone walks on to the gate */
   {
     const L = layer(3, 15), ink2 = inkG(L), cr = crewG(L);
-    el("path", { d: "M1380 400V250 M1374 250h12 M1300 262h160v44h-160z" }, ink2);
+    el("path", { d: "M1350 400V306 M1410 400V306" }, ink2); // two legs under the sign, none through it
+    el("rect", { x: 1300, y: 262, width: 160, height: 44, class: "sc-sign" }, ink2);
     el("text", { x: 1380, y: 290, class: "sc-label sc-label--sign" }, ink2).textContent = "JOIN THE CREW";
     const rec = person(1250, G, { cls: "sc-recruiter" }, cr);
     el("rect", { x: -6, y: 10, width: 12, height: 15, class: "sc-board" }, rec.aR.fore);

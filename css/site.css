@@ -764,3 +764,5 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 /* while the page moves the crew holds still: less repaint under the scroll */
 .is-scrolling .in-scene * { animation-play-state: paused !important; }
 .in-board { contain: layout style; }
+/* the sign is a solid board: the crosshair passes behind it, not through its words */
+.sc-sign { fill: var(--pp); }
