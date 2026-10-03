@@ -12,19 +12,6 @@ body: home ind ind--story
     <div class="in-scene" data-scene aria-hidden="true"></div>
     <span class="in-slot-mini" aria-hidden="true"></span>
 
-    <header class="in-head">
-      <a class="in-logo" href="#top" aria-label="Bravo Integrated Solutions — top">
-        <svg viewBox="0 0 790.89 148" aria-hidden="true"><use href="#logo-h"/></svg>
-      </a>
-      <span class="in-head__rule" aria-hidden="true"></span>
-      <button class="egg in-mark" type="button" aria-pressed="false" aria-label="Drawing mode">
-        <svg class="in-bulb" viewBox="0 0 24 24" aria-hidden="true">
-          <g class="in-bulb__rays"><path d="M12 1.5v2M4.6 4.6l1.4 1.4M19.4 4.6L18 6M2 11.5h2M20 11.5h2"/></g>
-          <path class="in-bulb__glass" d="M12 5.5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.7h5.2v-.7c0-.8.4-1.5 1-2A6 6 0 0 0 12 5.5Z"/>
-          <path class="in-bulb__base" d="M9.6 20.5h4.8M10.4 22.5h3.2"/>
-        </svg>
-      </button>
-    </header>
 
     <div class="in-board" data-in-board>
       <svg viewBox="0 0 1000 1000" role="group" aria-label="Manoeuvring board — sections">
@@ -42,6 +29,29 @@ body: home ind ind--story
       <p class="in-hdg" aria-hidden="true">HDG <b data-hdg>000.0</b>°</p>
     </div>
   </div>
+
+  <header class="in-head">
+    <a class="in-logo" href="#top" aria-label="Bravo Integrated Solutions — top">
+      <svg viewBox="0 0 790.89 148" aria-hidden="true"><use href="#logo-h"/></svg>
+    </a>
+    <span class="in-head__rule" aria-hidden="true"></span>
+    <nav class="in-nav" id="in-nav" aria-label="Sections">
+      <ul>
+        <li><a href="#services" data-step-link="1"><span>000</span>Services</a></li>
+        <li><a href="#projects" data-step-link="2"><span>090</span>Projects</a></li>
+        <li><a href="#careers" data-step-link="3"><span>180</span>Careers</a></li>
+        <li><a href="#contact" data-step-link="4"><span>270</span>Contact</a></li>
+      </ul>
+    </nav>
+    <button class="in-menu" type="button" aria-expanded="false" aria-controls="in-nav" aria-label="Menu"><i></i><i></i></button>
+    <button class="egg in-mark" type="button" aria-pressed="false" aria-label="Drawing mode">
+      <svg class="in-bulb" viewBox="0 0 24 24" aria-hidden="true">
+        <g class="in-bulb__rays"><path d="M12 1.5v2M4.6 4.6l1.4 1.4M19.4 4.6L18 6M2 11.5h2M20 11.5h2"/></g>
+        <path class="in-bulb__glass" d="M12 5.5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.7h5.2v-.7c0-.8.4-1.5 1-2A6 6 0 0 0 12 5.5Z"/>
+        <path class="in-bulb__base" d="M9.6 20.5h4.8M10.4 22.5h3.2"/>
+      </svg>
+    </button>
+  </header>
 
   <main id="main" class="in-flow">
     <section class="in-sec in-sec--hero" id="top" data-step="0" aria-label="Bravo Integrated Solutions">

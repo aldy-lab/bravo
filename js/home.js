@@ -268,10 +268,8 @@
   // page natively — no per-frame flight, no docking, no crosshair
   const stage = board.parentNode;
   const phoneM = matchMedia("(max-width: 1099px)");
-  const mount = () => {
-    if (phoneM.matches && board.parentNode !== slotHero) { slotHero.append(board); board.style.transform = ""; board.style.width = ""; baseW = 0; }
-    if (!phoneM.matches && board.parentNode !== stage) { stage.append(board); baseW = 0; cur.w = 0; }
-  };
+  // phones have no board at all (CSS hides it); a plain menu navigates instead
+  const mount = () => { if (phoneM.matches) { baseW = 0; cur.w = 0; } };
   phoneM.addEventListener("change", () => { mount(); schedule(); });
   const place = (now) => {
     placing = 0;
@@ -313,6 +311,7 @@
     wrap.dataset.step = n;
     const sec = $(`.in-sec[data-step="${n}"]`);
     if (sec && sec.dataset.brg && !dragging) steer(+sec.dataset.brg);
+    document.querySelectorAll("[data-step-link]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.stepLink === String(n)));
   };
   const io = new IntersectionObserver((entries) => {
     entries.forEach((en) => { if (en.isIntersecting) setStep(+en.target.dataset.step); });
@@ -350,6 +349,13 @@
     e.preventDefault();
     glideTo(el);
   });
+
+  /* phones: the menu */
+  const menuBtn = $(".in-menu"), head = $(".in-head");
+  const setMenu = (open) => { head.classList.toggle("is-open", open); menuBtn.setAttribute("aria-expanded", String(open)); };
+  menuBtn.addEventListener("click", () => setMenu(!head.classList.contains("is-open")));
+  $("#in-nav").addEventListener("click", (e) => { if (e.target.closest("a")) setMenu(false); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape") setMenu(false); });
 
   layout();
   booted = true;

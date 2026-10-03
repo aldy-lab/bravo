@@ -355,7 +355,7 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 
 /* running header */
 .in-head {
-  position: absolute; left: var(--gutter); right: var(--gutter); top: 0; z-index: 4; pointer-events: auto;
+  position: fixed; left: var(--gutter); right: var(--gutter); top: 0; z-index: 5; pointer-events: auto;
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: clamp(16px, 2.5vw, 40px);
   height: var(--head); font: 400 .8125rem/1 var(--f-text); color: var(--ik-2);
 }
@@ -775,15 +775,26 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
   .in-list li { padding: 9px 0; }
 }
 
-/* ── phones: the board only on the hero, large, scrolling with the page ── */
+/* ── phones: no board; a plain menu, and the crew strip on every screen ── */
+.in-nav, .in-menu { display: none; }
 @media (max-width: 1099px) {
-  .in-cross, .in-slot-mini { display: none; }
-  .in-sec--hero { height: 100svh; min-height: 520px; grid-template-rows: auto minmax(0, 1fr) auto; padding-bottom: calc(var(--scene-h, 140px) * .58); } /* the buttons sit over the empty top of the crew strip */
-  .in-slot-hero { visibility: visible; position: relative; height: 100%; width: 100%; min-width: 0; aspect-ratio: auto; container-type: size; }
-  .in-slot-hero .in-board { position: absolute; inset: 0; margin: auto; width: min(100cqw, 100cqh) !important; height: min(100cqw, 100cqh); transform: none !important; z-index: 1; touch-action: pan-y; will-change: auto; }
-  .in-slot-hero .in-node__t { font-size: 30px; letter-spacing: .2em; }
-  .in-slot-hero .in-num { font-size: 26px; }
-  .in-hdg { display: none; }
-  /* sections: nothing docked any more, the text can use the space */
+  .in-cross, .in-slot-mini, .in-slot-hero, .in-board, .in-hdg { display: none; }
+  .in-head { grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px; background: var(--pp); transition: background-color .6s; }
+  .in-menu { grid-column: 3; justify-self: end; display: grid; place-content: center; gap: 6px; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--ik); cursor: pointer; }
+  .in-menu i { display: block; width: 22px; height: 1.5px; background: currentColor; transition: transform .3s cubic-bezier(0.23, 1, 0.32, 1); }
+  .is-open .in-menu i:first-child { transform: translateY(3.75px) rotate(45deg); }
+  .is-open .in-menu i:last-child { transform: translateY(-3.75px) rotate(-45deg); }
+  .in-mark { grid-column: 4; }
+  .in-nav { display: block; position: absolute; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); top: var(--head); padding: 4px var(--gutter) 16px; background: var(--pp); border-bottom: 1px solid var(--ik-3);
+    opacity: 0; transform: translateY(-8px); visibility: hidden; transition: opacity .25s cubic-bezier(0.23, 1, 0.32, 1), transform .25s cubic-bezier(0.23, 1, 0.32, 1), visibility 0s .25s; }
+  .is-open .in-nav { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+  .in-nav li + li { border-top: 1px solid var(--ik-3); }
+  .in-nav a { display: flex; align-items: baseline; gap: 14px; min-height: 52px; padding: 14px 0; color: var(--ik); text-decoration: none; font: 700 1.25rem/1 var(--f-display); letter-spacing: -.01em; text-transform: uppercase; }
+  .in-nav a span { font: 500 .75rem/1 var(--f-text); letter-spacing: .14em; color: var(--ik-2); }
+  .in-nav a[aria-current] { color: var(--accent); }
+  .in-nav a[aria-current] span { color: var(--accent); }
+  /* the hero: headline and the two entries, centred above the crew */
+  .in-sec--hero { height: auto; min-height: 100svh; grid-template-rows: auto auto; align-content: center; row-gap: 32px; padding-bottom: calc(var(--scene-h, 140px) + 24px); }
   .in-sec:not(.in-sec--hero) { padding-bottom: calc(var(--scene-h, 140px) + 16px); }
 }
+@media (max-width: 1099px) { .sc-steps { display: none; } } /* the step strip is cut by the close-up */
