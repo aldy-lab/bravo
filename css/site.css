@@ -800,10 +800,15 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 @media (max-width: 1099px) { .sc-steps { display: none; } } /* the step strip is cut by the close-up */
 /* the crew crossing the page between screens */
 .in-runners { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 6; pointer-events: none; overflow: visible; }
-.in-run-chute { opacity: 0; }
-.in-runners .sc-chute { fill: none; stroke: var(--ik); stroke-width: 1; }
 .in-runners * { vector-effect: non-scaling-stroke; } /* the same stroke as the yard figures, at any scale */
 /* the runner's own limb classes: the yard's .sc-leg/.sc-arm carry a CSS transform that would override his joints */
 .rn-leg line { stroke-width: 5.5; }
 .rn-arm line { stroke-width: 4.5; }
 .rn-arm--l line { stroke: #b8391a; }
+
+/* switching modes: the new one spreads from the bulb as a widening circle */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.is-theming::view-transition-new(root) { animation: in-reveal 1s cubic-bezier(0.77, 0, 0.175, 1); }
+@keyframes in-reveal { from { clip-path: circle(0 at var(--vx) var(--vy)); } to { clip-path: circle(var(--vr) at var(--vx) var(--vy)); } }
+/* no colour tweening underneath the reveal: the circle is the transition */
+.is-theming, .is-theming * { transition: none !important; }

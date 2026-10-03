@@ -1,13 +1,13 @@
-/* The runner: when a screen changes, one of its crew arrives over the page.
-   He drops in by parachute onto the section heading, walks along the tops
-   of its letters word by word, hops the gaps between words, jumps down to
-   the next line, makes his way down the page and drops into the yard onto
-   the spot where his scene figure stands, which then takes over.
+/* The runner — drawing mode only. When a screen changes, one of its crew
+   jumps in from the right edge of the screen and makes his way over the
+   page: across the top of the docked board, along the tops of the
+   heading's letters word by word, over a row, a tag or a button below,
+   and down into the yard onto the spot where his scene figure stands,
+   which then takes over. In the dark mode the crew is simply there.
 
    He is the same size as the crew in the yard (the scene's own scale), and
-   he is posed frame by frame: a real gait — the stance leg straight and
-   carrying him at the speed of his stride, the swing leg folding at the
-   knee, arms in counter-swing, hips rising over the planted foot. */
+   posed frame by frame: a real gait — the stride drives the speed so feet
+   do not slide, the swing knee folds, arms counter-swing. */
 (() => {
   "use strict";
   const host = document.querySelector("[data-scene]");
@@ -27,17 +27,13 @@
   // who makes the trip, per screen
   const WHO = { 0: ".sc-rigger", 1: ".sc-welder", 2: ".sc-painter", 3: ".sc-recruiter", 4: ".sc-caller", 5: ".sc-luncher" };
   const HEAD = { 0: ".in-h1", 1: ".in-h2", 2: ".in-h2", 3: ".in-h2", 4: ".in-h2", 5: ".in-end__line" };
+  const LOWER = ".in-tags li, .in-list li, .in-jobs li, .in-refs li, .in-btn, .in-path, .in-note:not([hidden]), .in-contact > div, .in-end__meta";
   const CAP = 0.185; // cap top below the text box top, as a share of the font size (measured)
 
   /* ── the rig ───────────────────────────────────────────── */
   const LEG = 13; // thigh = shin, in scene units
   const rig = () => {
     const g = el("g", {}, crewG);
-    const chute = el("g", { class: "sc-chute in-run-chute" }, g);
-    el("path", { d: "M-6 -50 L-38 -118 M6 -50 L38 -118 M0 -50 L0 -124" }, chute);
-    const canopy = el("g", {}, chute);
-    el("path", { d: "M-44 -116 Q-44 -158 0 -160 Q44 -158 44 -116 Q33 -125 22 -116 Q11 -125 0 -116 Q-11 -125 -22 -116 Q-33 -125 -44 -116 Z", class: "sc-canopy" }, canopy);
-    el("path", { d: "M-11 -159 Q0 -160 11 -159 L9 -119 Q0 -125 -9 -119 Z", class: "sc-canopy__panel" }, canopy);
     const bob = el("g", {}, g);
     const limb = (parent, x, y, len, cls) => {
       const j = el("g", { transform: `translate(${x} ${y})` }, parent);
@@ -58,7 +54,7 @@
     el("path", { d: "M-7.5 -8 A7.5 7.5 0 0 1 7.5 -8 Z M-10 -8 H10", class: "sc-helmet" }, headR);
     const rot = (n, a) => n.setAttribute("transform", `rotate(${(a || 0).toFixed(1)})`);
     return {
-      g, chute, canopy,
+      g,
       pose(p) {
         bob.setAttribute("transform", `translate(0 ${(p.bob || 0).toFixed(2)}) rotate(${(p.lean || 0).toFixed(1)} 0 -25)`);
         rot(aL[0], p.uaL); rot(aL[1], p.faL); rot(aR[0], p.uaR); rot(aR[1], p.faR);
@@ -123,25 +119,34 @@
     const head = sec.querySelector(HEAD[step]);
     const lines = head ? words(head) : [];
     const pts = [];
-    if (!lines.length) { pts.push({ t: "start", x: innerWidth / 2, y: -40 }, { t: "drop", target }); return pts; }
-    // parachute onto the end of the first line, then walk the lines boustrophedon:
-    // right to left on the first, hop down, left to right on the next…
-    const first = lines[0], lastW = first[first.length - 1];
-    const lx = lastW.r - 12;
-    pts.push({ t: "start", x: lx + 110, y: -60 });
-    pts.push({ t: "chute", x: lx, y: lastW.y });
-    pts.push({ t: "pack" });
-    // the first line end to end, word by word, hopping the gaps (right to left)
-    [...first].reverse().forEach((w, wi) => {
-      if (wi) pts.push({ t: "hop", x: w.r - 8, y: w.y });
+    const first = lines[0];
+    // in from the right edge: on desktop onto the top of the docked board first
+    const board = document.querySelector(".in-board");
+    const br = board && getComputedStyle(board).display !== "none" && document.querySelector(".is-docked") ? board.getBoundingClientRect() : null;
+    const y0 = br ? br.top + br.height * 0.05 : first ? first[first.length - 1].y : innerHeight * 0.4;
+    pts.push({ t: "start", x: innerWidth + 40, y: y0 + 30 });
+    if (br) {
+      pts.push({ t: "hop", x: br.left + br.width * 0.62, y: br.top + br.height * 0.05 });
+      pts.push({ t: "walk", x: br.left + br.width * 0.38, y: br.top + br.height * 0.05 });
+    }
+    // the heading's first line, word by word, right to left, hopping the gaps
+    if (first) [...first].reverse().forEach((w) => {
+      pts.push({ t: "hop", x: w.r - 8, y: w.y });
       pts.push({ t: "walk", x: w.l + 8, y: w.y });
     });
-    // a hop down onto the next line, then down into the yard
-    const second = lines[1];
-    if (second && second.length) {
-      const w = second[0];
-      pts.push({ t: "hop", x: w.l + 10, y: w.y });
-    }
+    // then one or two of the elements below: a row, a tag, a button
+    let x = pts[pts.length - 1].x, y = pts[pts.length - 1].y;
+    const below = [...sec.querySelectorAll(LOWER)].map((e) => e.getBoundingClientRect())
+      .filter((r) => r.width > 36 && r.top > y + 24 && r.bottom < innerHeight - 40).sort((a, b) => a.top - b.top);
+    const picks = [];
+    below.forEach((r) => { if (picks.length < 2 && (!picks.length || r.top > picks[picks.length - 1].top + 30)) picks.push(r); });
+    picks.forEach((r) => {
+      const land = Math.max(r.left + 10, Math.min(r.right - 10, x + 40));
+      pts.push({ t: "hop", x: land, y: r.top });
+      const along = Math.max(r.left + 10, Math.min(r.right - 10, land + Math.min(110, r.width * 0.5)));
+      if (Math.abs(along - land) > 20) pts.push({ t: "walk", x: along, y: r.top });
+      x = along;
+    });
     pts.push({ t: "drop", target });
     return pts;
   };
@@ -165,27 +170,7 @@
       if (!s) return finish();
       const tgt = s.t === "drop" ? feet(s.target) : s;
       const e = (now - t0) / 1000;
-      if (s.t === "chute") {
-        const dur = 2.8, u = Math.min(1, e / dur), v = 1 - Math.pow(1 - u, 2.2);
-        const swing = Math.sin(e * 2.0) * 9 * (1 - u * 0.75);
-        r.chute.style.opacity = "1";
-        r.canopy.setAttribute("transform", `scale(${(1 + Math.sin(e * 3.1) * 0.03).toFixed(3)} 1)`);
-        r.place(from.x + (tgt.x - from.x) * v + Math.sin(e * 1.1) * 12 * (1 - u), from.y + (tgt.y - from.y) * v, scale, swing);
-        const fl = Math.max(0, (u - 0.86) / 0.14);
-        r.pose({ bob: 0, lean: 0, head: -4 * Math.sin(e * 2.0), uaL: 160 - fl * 18, faL: 6, uaR: -160 + fl * 18, faR: -6,
-          thL: 7 * Math.sin(e * 2.4) - fl * 26, shL: 12 + fl * 34, thR: -7 * Math.sin(e * 2.4 + 0.7) + fl * 18, shR: -12 - fl * 26 });
-        if (u >= 1) { from = { x: tgt.x, y: tgt.y }; k++; t0 = now; }
-      } else if (s.t === "pack") {
-        const d = 1.1, f = Math.min(1, e / 0.8);
-        r.place(from.x, from.y, scale, 0);
-        // knees give, he straightens, glances back at the canopy as it falls away
-        const p = e < 0.35 ? mix(STAND, crouch(1), smooth(e / 0.35)) : e < 0.8 ? mix(crouch(1), STAND, smooth((e - 0.35) / 0.45)) : { ...STAND };
-        p.head = e > 0.8 ? 14 * Math.sin(Math.min(1, (e - 0.8) / 0.8) * Math.PI) : 0;
-        r.pose(p);
-        r.canopy.setAttribute("transform", `translate(${(f * 46).toFixed(1)} ${(f * 112).toFixed(1)}) scale(${(1 - f * 0.2).toFixed(3)} ${(1 - f * 0.86).toFixed(3)})`);
-        r.chute.style.opacity = String(1 - smooth(f));
-        if (e >= d) { r.chute.style.display = "none"; k++; t0 = now; φ = 0; }
-      } else if (s.t === "walk") {
+      if (s.t === "walk") {
         // he moves exactly as far as his feet do: speed follows the stride
         const dir = tgt.x < from.x ? 1 : -1;
         const dist = Math.abs(tgt.x - from.x);
@@ -226,9 +211,14 @@
 
   // wait for the page to stop moving, then send him over it
   let settle = 0;
+  const drawing = () => document.documentElement.dataset.mode === "drawing";
+  // leaving the drawing mode mid-trip: he is simply at his post
+  new MutationObserver(() => { if (!drawing() && run) { run.stop(); run = null; } })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-mode"] });
   host.addEventListener("scene:show", (e) => {
     if (run) { run.stop(); run = null; }
     clearTimeout(settle);
+    if (!drawing()) return;
     const layer = e.detail.layer, step = layer.dataset.for;
     const sec = document.querySelector(`.in-sec[data-step="${step}"]`);
     const man = layer.querySelector(WHO[step]);

@@ -61,9 +61,23 @@ const CONFIG = {
     $$(".egg").forEach((b) => b.setAttribute("aria-pressed", String(drawing)));
     try { localStorage.setItem("bravo-mode", drawing ? "drawing" : "photo"); } catch (e) { /* private mode */ }
   };
+  // the new mode spreads from the bulb as a widening circle (View Transitions);
+  // browsers without them get the plain colour transition
+  const toggleMode = (btn) => {
+    const next = root.dataset.mode !== "drawing";
+    if (!document.startViewTransition || reduced) { setMode(next); return; }
+    const r = btn.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    root.style.setProperty("--vx", x + "px");
+    root.style.setProperty("--vy", y + "px");
+    root.style.setProperty("--vr", Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + "px");
+    root.classList.add("is-theming");
+    const vt = document.startViewTransition(() => setMode(next));
+    vt.finished.finally(() => root.classList.remove("is-theming"));
+  };
   $$(".egg").forEach((b) => {
     b.setAttribute("aria-pressed", String(root.dataset.mode === "drawing"));
-    b.addEventListener("click", () => setMode(root.dataset.mode !== "drawing"));
+    b.addEventListener("click", () => toggleMode(b));
   });
 
   /* ── header: mobile menu ─────────────────────────────────── */
