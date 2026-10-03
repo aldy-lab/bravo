@@ -26,7 +26,7 @@ NAV = [
     ("contact.html", "contact", "Contact", "270"),
 ]
 PAGES = ["index.html"] + [n[0] for n in NAV]
-VARIANTS = ["plot.html", "minimal.html", "te.html"]  # alternative heroes: built, but kept out of the sitemap and search
+VARIANTS = ["plot.html", "minimal.html", "te.html", "industrial.html"]  # alternative heroes: built, but kept out of the sitemap and search
 
 
 def part(name):
