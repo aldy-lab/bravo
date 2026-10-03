@@ -54,6 +54,33 @@
     hub.append(path);
   });
 
+  /* drawing mode: the board gains its dimensions, inked in as the mode switches */
+  const dwg = $("[data-dwg]", board);
+  const ink = (name, attrs) => el(name, { pathLength: 1, ...attrs }, dwg);
+  ink("line", { class: "in-dim", x1: C - R, y1: C + R + 34, x2: C + R, y2: C + R + 34, "marker-start": "url(#in-dim-arrow)", "marker-end": "url(#in-dim-arrow)" });
+  ink("line", { class: "in-dim in-dim--ext", x1: C - R, y1: C + 40, x2: C - R, y2: C + R + 48 });
+  ink("line", { class: "in-dim in-dim--ext", x1: C + R, y1: C + 40, x2: C + R, y2: C + R + 48 });
+  el("text", { class: "in-dim__t", x: C, y: C + R + 24 }, dwg).textContent = "Ø 860";
+  ink("line", { class: "in-dim", x1: C, y1: C, x2: C + 330 * Math.cos(Math.PI / 4), y2: C - 330 * Math.sin(Math.PI / 4), "marker-end": "url(#in-dim-arrow)" });
+  el("text", { class: "in-dim__t", x: C + 190, y: C - 214, transform: `rotate(-45 ${C + 190} ${C - 214})` }, dwg).textContent = "R 330";
+  ink("line", { class: "in-dim", x1: C, y1: C, x2: C - 220 * Math.cos(Math.PI / 4), y2: C + 220 * Math.sin(Math.PI / 4), "marker-end": "url(#in-dim-arrow)" });
+  el("text", { class: "in-dim__t", x: C - 118, y: C + 140, transform: `rotate(-45 ${C - 118} ${C + 140})` }, dwg).textContent = "R 220";
+  ink("line", { class: "in-dim in-dim--axis", x1: C - R - 30, y1: C, x2: C + R + 30, y2: C });
+  ink("line", { class: "in-dim in-dim--axis", x1: C, y1: C - R - 30, x2: C, y2: C + R + 30 });
+  const arc = ink("path", { class: "in-dim in-dim--arc", "marker-end": "url(#in-dim-arrow)" });
+  const arcT = el("text", { class: "in-dim__t in-dim__t--accent" }, dwg);
+  el("text", { class: "in-dim__t in-dim__t--sheet", x: C + R - 4, y: C + R + 70 }, dwg).textContent = "DWG BIS-001 · REV A · SCALE 1:1";
+  // the angle from the heading to the next section, dimensioned like a drawing
+  const drawArc = (brgRel) => {
+    const r = 372, a0 = -90, a1 = -90 + brgRel; // svg angles, 0 = east
+    const p = (a) => [C + r * Math.cos(a * Math.PI / 180), C + r * Math.sin(a * Math.PI / 180)];
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    arc.setAttribute("d", Math.abs(brgRel) < 0.5 ? "" : `M${x0} ${y0} A${r} ${r} 0 ${Math.abs(brgRel) > 180 ? 1 : 0} ${brgRel > 0 ? 1 : 0} ${x1} ${y1}`);
+    const [tx, ty] = p(-90 + brgRel / 2);
+    arcT.setAttribute("x", tx + (brgRel / 2 > 0 ? 18 : -18)); arcT.setAttribute("y", ty - 10);
+    arcT.textContent = Math.abs(brgRel) < 0.5 ? "" : `${Math.abs(Math.round(brgRel))}°`;
+  };
+
   /* targets: the emblem's isometric layer, drawn flat on the sheet */
   const LAYER = "M0 -22 L40 -6 L0 10 L-40 -6 Z";
   const WALL = "M-40 -6 L0 10 L0 22 L-40 6 Z";
@@ -83,7 +110,7 @@
   const entrance = !reduced && !seen;
   if (!entrance) wrap.classList.add("is-ready", "is-instant");
 
-  let heading = entrance ? -40 : 0, target = 0, active = -1, raf = 0, last = 0, onArrive = null;
+  let heading = entrance ? -25 : 0, target = 0, active = -1, raf = 0, last = 0, onArrive = null;
   const shortest = (from, to) => from + (((to - from) % 360) + 540) % 360 - 180;
   const nearest = (h) => Math.round(h / STEP) * STEP;
   const read = { title: $('[data-r="title"]'), text: $('[data-r="text"]'), href: $('[data-r="href"]') };
@@ -99,6 +126,7 @@
     const k = board.clientWidth / 1000;
     card.setAttribute("transform", `rotate(${-heading} ${C} ${C})`);
     hdg.textContent = norm(heading).toFixed(1).padStart(5, "0");
+    drawArc(nearest(heading) + STEP - heading); // to the next section, clockwise
     nodes.forEach((n) => {
       const phi = (n.brg - heading) * Math.PI / 180;
       const sx = Math.sin(phi), sy = -Math.cos(phi);
@@ -227,33 +255,10 @@
   });
   sup.style.setProperty("--i", word.length);
 
-  /* pointer guides: thin lines that follow the cursor across the sheet,
-     with its position in the brand book's -30..30 / 20..-20 coordinates */
-  const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-  if (fine && !reduced) {
-    const gx = $(".in-guide__x"), gy = $(".in-guide__y"), gr = $("[data-guide-read]");
-    let tx = 0, ty = 0, cx = 0, cy = 0, gRaf = 0;
-    const follow = () => {
-      cx += (tx - cx) * 0.22; cy += (ty - cy) * 0.22;
-      gx.style.transform = `translateY(${cy}px)`;
-      gy.style.transform = `translateX(${cx}px)`;
-      gr.style.transform = `translate(${cx + 14}px, ${cy + 12}px)`;
-      gRaf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.3 ? requestAnimationFrame(follow) : 0;
-    };
-    wrap.addEventListener("pointermove", (e) => {
-      const r = wrap.getBoundingClientRect();
-      tx = e.clientX - r.left; ty = e.clientY - r.top;
-      if (!wrap.classList.contains("is-guided")) { cx = tx; cy = ty; wrap.classList.add("is-guided"); }
-      gr.textContent = `${((tx / r.width) * 60 - 30).toFixed(1)} · ${(20 - (ty / r.height) * 40).toFixed(1)}`;
-      if (!gRaf) gRaf = requestAnimationFrame(follow);
-    });
-    wrap.addEventListener("pointerleave", () => wrap.classList.remove("is-guided"));
-  }
-
   if (entrance) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       wrap.classList.add("is-ready");
-      setTimeout(() => steer(0), 350);
+      setTimeout(() => steer(0), 200);
     }));
   }
 })();
