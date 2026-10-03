@@ -1100,3 +1100,66 @@ ol, ul { list-style: none; }
   .in-dim { transition: none; }
 }
 @media (max-width: 1099px) { .in-hdg, .in-dim__t--sheet { display: none; } }
+
+/* ── Variant E: the assembly scene behind the page ───── */
+.in-scene {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 46%; z-index: -1; pointer-events: none;
+  /* fade out upwards */
+  -webkit-mask-image: linear-gradient(to top, #000 60%, transparent);
+  mask-image: linear-gradient(to top, #000 60%, transparent);
+}
+.in-scene svg { width: 100%; height: 100%; overflow: visible; }
+.in-scene svg * { vector-effect: non-scaling-stroke; }
+.sc-ink { fill: none; stroke: var(--ik); stroke-width: 1; opacity: .3; }
+.sc-ink .sc-rib, .sc-ink .sc-hatch { opacity: .5; }
+.sc-ground { opacity: 1; }
+.sc-crew { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; }
+.sc-leg line { stroke-width: 5.5; }
+.sc-arm line { stroke-width: 4.5; }
+.sc-arm--l line { stroke: #b8391a; } /* the far arm sits back in shade */
+.sc-body { fill: var(--accent); stroke: none; }
+.sc-band { stroke: var(--pp); stroke-width: 1.5; opacity: .55; }
+.sc-head { fill: var(--accent); stroke: none; }
+.sc-helmet { fill: var(--ik); stroke: var(--ik); stroke-width: 1.5; }
+.sc-beam { stroke: var(--ik); stroke-width: 1.5; opacity: .8; }
+.sc-tool { stroke: var(--ik); stroke-width: 2.5; }
+.sc-leg, .sc-arm { transform: rotate(var(--a)); }
+
+/* walking: legs swing, the pair crosses the yard and fades at the ends */
+.sc-walker .sc-leg--l { animation: sc-step .9s ease-in-out infinite alternate; }
+.sc-walker .sc-leg--r { animation: sc-step .9s ease-in-out infinite alternate-reverse; }
+.sc-walker--b .sc-leg--l { animation-delay: -.45s; } .sc-walker--b .sc-leg--r { animation-delay: -.45s; }
+@keyframes sc-step { from { transform: rotate(calc(var(--a) - 20deg)); } to { transform: rotate(calc(var(--a) + 20deg)); } }
+.sc-carry { animation: sc-cross 18s linear infinite; }
+@keyframes sc-cross {
+  0% { transform: translateX(-30px); opacity: 0; } 6% { opacity: 1; }
+  92% { opacity: 1; } 100% { transform: translateX(270px); opacity: 0; }
+}
+
+/* welding: the torch flickers, sparks spray and fade */
+.sc-glow { fill: var(--accent); stroke: none; animation: sc-glow .18s steps(2) infinite; }
+@keyframes sc-glow { 50% { opacity: .35; } }
+.sc-spark { stroke-width: 1.5; transform: rotate(var(--r)) translateX(0); opacity: 0; animation: sc-spark .7s cubic-bezier(0.23, 1, 0.32, 1) infinite; animation-delay: var(--d); }
+@keyframes sc-spark { 0% { opacity: 1; transform: rotate(var(--r)) translateX(2px); } 100% { opacity: 0; transform: rotate(var(--r)) translateX(24px); } }
+.sc-welder .sc-arm--r { animation: sc-weld 3.2s ease-in-out infinite alternate; }
+@keyframes sc-weld { from { transform: rotate(calc(var(--a) - 6deg)); } to { transform: rotate(calc(var(--a) + 6deg)); } }
+
+/* the crane lowers its section, the rigger guides it in */
+.sc-cable { transform-box: view-box; animation: sc-cable 7s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate; }
+.sc-load { animation: sc-load 7s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate; }
+@keyframes sc-cable { from { transform: scaleY(1); } 70%, to { transform: scaleY(2.6); } }
+@keyframes sc-load { from { transform: translateY(0); } 70%, to { transform: translateY(22px); } }
+.sc-rigger .sc-arm--l { animation: sc-wave 1.8s ease-in-out infinite alternate; }
+@keyframes sc-wave { from { transform: rotate(calc(var(--a) - 14deg)); } to { transform: rotate(calc(var(--a) + 8deg)); } }
+
+/* the bolter turns the wrench in short pulls */
+.sc-bolter .sc-arm--r { animation: sc-bolt .55s ease-in-out infinite alternate; }
+@keyframes sc-bolt { from { transform: rotate(calc(var(--a) - 22deg)); } to { transform: rotate(calc(var(--a) + 10deg)); } }
+
+[data-mode="drawing"] .sc-ink { opacity: .45; }
+
+@media (prefers-reduced-motion: reduce) {
+  .in-scene * { animation: none !important; }
+  .sc-spark { opacity: 0; }
+}
+@media (max-width: 1099px) { .in-scene { display: none; } } /* stacked: the board fills the screen and the buttons would sit on the crew */

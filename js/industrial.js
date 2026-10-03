@@ -223,6 +223,7 @@
     const w = wrap.getBoundingClientRect(), b = board.getBoundingClientRect();
     wrap.style.setProperty("--in-cx", (b.left + b.width / 2 - w.left) + "px");
     wrap.style.setProperty("--in-cy", (b.top + b.height / 2 - w.top) + "px");
+    wrap.style.setProperty("--b-r", b.width / 2 + "px");
   };
   new ResizeObserver(align).observe(wrap);
   new ResizeObserver(() => { layout(); align(); }).observe(board);
