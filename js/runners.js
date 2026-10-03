@@ -44,6 +44,12 @@
     el("line", { x1: -7, y1: -40, x2: 7, y2: -40, class: "sc-band" }, bob);
     el("line", { x1: -7, y1: -33, x2: 7, y2: -33, class: "sc-band" }, bob);
     const aR = arm("r");
+    // the parachute: risers from the shoulders up to a canopy, swinging the man below it
+    const chute = el("g", { class: "sc-chute in-run-chute" }, g);
+    el("path", { d: "M-6 -50 L-38 -118 M6 -50 L38 -118 M0 -50 L0 -124" }, chute);
+    const canopy = el("g", { class: "in-run-canopy" }, chute);
+    el("path", { d: "M-44 -116 Q-44 -158 0 -160 Q44 -158 44 -116 Q33 -125 22 -116 Q11 -125 0 -116 Q-11 -125 -22 -116 Q-33 -125 -44 -116 Z", class: "sc-canopy" }, canopy);
+    el("path", { d: "M-11 -159 Q0 -160 11 -159 L9 -119 Q0 -125 -9 -119 Z", class: "sc-canopy__panel" }, canopy);
     const head = el("g", { transform: "translate(0 -54)" }, bob);
     el("circle", { cx: 0, cy: -7, r: 6, class: "sc-head" }, head);
     el("path", { d: "M-7.5 -8 A7.5 7.5 0 0 1 7.5 -8 Z M-10 -8 H10", class: "sc-helmet" }, head);
@@ -55,7 +61,8 @@
         rot(aL[0], p.uaL); rot(aL[1], p.faL); rot(aR[0], p.uaR); rot(aR[1], p.faR);
         rot(lL[0], p.thL); rot(lL[1], p.shL); rot(lR[0], p.thR); rot(lR[1], p.shR);
       },
-      place(x, y, s) { g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})`); },
+      place(x, y, s, a = 0) { g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)}) rotate(${a.toFixed(2)} 0 -130)`); },
+      chute, canopy,
     };
   };
 
@@ -77,25 +84,25 @@
 
   const plan = (sec, target, i) => {
     const L = ledges(sec).filter((r) => r.top > 90);
-    const pick = L.filter((_, k) => k % (i ? 2 : 1) === (i ? 1 : 0)).slice(0, 4);
+    // each lands on a different ledge near the top, then makes his way down
+    const first = L[Math.min(i, L.length - 1)];
+    const rest = L.filter((r) => r !== first && r.top > (first ? first.top : 0)).filter((_, k) => k % 2 === i % 2).slice(0, 2);
     const pts = [];
-    // desktop: they climb out over the top of the docked board; phones: walk in from the screen edge
-    const board = document.querySelector(".in-board");
-    const br = board && getComputedStyle(board).display !== "none" ? board.getBoundingClientRect() : null;
-    if (br && br.width > 60 && br.top > 60) {
-      pts.push({ t: "start", x: br.left + br.width * (0.5 + i * 0.12), y: br.top + br.height * 0.07 });
+    if (first) {
+      const lx = first.left + Math.min(first.width - 20, 60 + i * 140 + Math.random() * 40);
+      pts.push({ t: "start", x: lx + (i % 2 ? -90 : 90), y: -40 });
+      pts.push({ t: "chute", x: lx, y: first.top });
+      pts.push({ t: "pack" });
+      const along = Math.max(first.left + 14, lx - Math.min(110, first.width * 0.35));
+      if (Math.abs(along - lx) > 24) pts.push({ t: "walk", x: along, y: first.top });
     } else {
-      const y0 = pick.length ? pick[0].top : innerHeight * 0.3;
-      pts.push({ t: "start", x: innerWidth + 24, y: y0 });
-      pts.push({ t: "walk", x: Math.min(innerWidth - 24, (pick[0] ? pick[0].right : innerWidth) - 10), y: y0 });
-      pick.shift();
+      pts.push({ t: "start", x: innerWidth * 0.5, y: -40 });
     }
-    pick.forEach((r, k) => {
+    rest.forEach((r) => {
       const prevX = pts[pts.length - 1].x;
-      const land = Math.max(r.left + 14, Math.min(r.right - 14, prevX - 40));
+      const land = Math.max(r.left + 14, Math.min(r.right - 14, prevX - 30));
       pts.push({ t: "hop", x: land, y: r.top });
-      // a short stroll along it, never the whole length: they are on their way somewhere
-      const across = Math.max(r.left + 14, land - Math.min(140, r.width * 0.45));
+      const across = Math.max(r.left + 14, land - Math.min(100, r.width * 0.3));
       if (Math.abs(across - land) > 24) pts.push({ t: "walk", x: across, y: r.top });
     });
     pts.push({ t: "drop", target });
@@ -117,13 +124,36 @@
     const feet = (m) => { const b = m.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.bottom }; };
     const frame = (now) => {
       if (dead) return;
-      if (!t0) { t0 = now; last = now; from = { x: steps[0].x, y: steps[0].y }; k = 1; r.g.style.transition = "opacity .5s"; r.g.style.opacity = "1"; }
+      if (!t0) { t0 = now; last = now; from = { x: steps[0].x, y: steps[0].y }; k = 1; r.g.style.opacity = "1"; }
       const dt = (now - last) / 1000; last = now;
       const s = steps[k];
       if (!s) { finish(); return; }
       const sx = s.t === "drop" ? feet(s.target).x : s.x, sy = s.t === "drop" ? feet(s.target).y : s.y;
       const dist = Math.hypot(sx - from.x, sy - from.y);
-      if (s.t === "walk") {
+      if (s.t === "chute") {
+        // a slow descent, swinging under the canopy, easing off before touchdown
+        const dur = 3.6, e = (now - t0) / 1000, u = Math.min(1, e / dur);
+        const v = 1 - Math.pow(1 - u, 2.2);
+        const swing = Math.sin(e * 2.1) * 9 * (1 - u * 0.7);
+        const x = from.x + (sx - from.x) * v + Math.sin(e * 1.05) * 14 * (1 - u);
+        r.place(x, from.y + (sy - from.y) * v, scale, swing);
+        r.chute.style.opacity = "1";
+        r.canopy.setAttribute("transform", `scale(${(1 + Math.sin(e * 3.2) * 0.03).toFixed(3)} 1)`);
+        const flare = Math.max(0, (u - 0.85) / 0.15);
+        r.pose({ bob: 0, uaL: 158 - flare * 20, faL: 8, uaR: -158 + flare * 20, faR: -8,
+          thL: 6 * Math.sin(e * 2.6) - flare * 22, shL: 10 + flare * 30, thR: -6 * Math.sin(e * 2.6 + 0.6) + flare * 22, shR: -10 - flare * 30 });
+        if (u >= 1) { from = { x: sx, y: sy }; k++; t0 = now; }
+      } else if (s.t === "pack") {
+        // touchdown: knees give, the canopy sags and falls behind him
+        const e = (now - t0) / 1000, d = 1.1;
+        const c = Math.min(1, e / 0.35);
+        r.place(from.x, from.y, scale, 0);
+        r.pose(e < 0.45 ? mix(STAND, crouch(1), c) : mix(crouch(1), STAND, Math.min(1, (e - 0.45) / 0.4)));
+        const f = Math.min(1, e / 0.9);
+        r.canopy.setAttribute("transform", `translate(${(f * 40).toFixed(1)} ${(f * 110).toFixed(1)}) scale(${(1 - f * 0.2).toFixed(3)} ${(1 - f * 0.85).toFixed(3)})`);
+        r.chute.style.opacity = String(1 - f);
+        if (e >= d) { r.chute.style.display = "none"; k++; t0 = now; ph = 0; }
+      } else if (s.t === "walk") {
         const dur = Math.max(0.3, Math.abs(sx - from.x) / SPEED);
         const u = Math.min(1, (now - t0) / 1000 / dur);
         const dir = sx < from.x ? 1 : -1;
@@ -171,7 +201,7 @@
     const wait = () => {
       if (Math.abs(scrollY - lastY) > 0.5) { lastY = scrollY; settle = setTimeout(wait, 140); return; }
       if (wrap.dataset.step !== step) return;
-      runs = men.map((m, i) => launch(m, sec, i, i * 1600));
+      runs = men.map((m, i) => launch(m, sec, i, i * 1300));
     };
     settle = setTimeout(wait, 200);
   });

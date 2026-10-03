@@ -800,3 +800,5 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 @media (max-width: 1099px) { .sc-steps { display: none; } } /* the step strip is cut by the close-up */
 /* the crew crossing the page between screens */
 .in-runners { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 6; pointer-events: none; overflow: visible; }
+.in-run-chute { opacity: 0; }
+.in-runners .sc-chute { fill: none; stroke: var(--ik); stroke-width: 1; }
