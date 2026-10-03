@@ -343,7 +343,7 @@ ol, ul { list-style: none; }
 .ind .top, .ind .foot, .ind .skip { display: none; }
 .in-wrap {
   --cf: calc((100vw - 2 * var(--gutter)) / 9.48); /* the cover word spans the full width */
-  position: relative; isolation: isolate; height: 100svh; min-height: 620px; overflow: hidden;
+  position: relative; isolation: isolate; height: 100svh; min-height: 540px; overflow: hidden;
   display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
   padding: 0 var(--gutter);
 }
@@ -460,7 +460,7 @@ ol, ul { list-style: none; }
 /* the headline: staggered lines, solid and outline (after Colombo NDT, set in the brand's wide face) */
 .in-left { max-width: none; gap: clamp(28px, 5vh, 56px); container-type: inline-size; }
 
-.in-h1 { display: grid; font: 800 min(11.6cqi, 7.2rem)/.9 var(--f-display); font-stretch: 100%; letter-spacing: -.035em; text-transform: uppercase; }
+.in-h1 { display: grid; font: 800 min(11.6cqi, 7.2rem, var(--h1-fit, 7.2rem))/.9 var(--f-display); font-stretch: 100%; letter-spacing: -.035em; text-transform: uppercase; }
 .in-h1__l { display: block; overflow: hidden; padding-bottom: .04em; }
 .in-h1__l > span { display: inline-block; }
 .in-h1__l--o { padding-left: .9em; color: transparent; -webkit-text-stroke: 1.5px var(--ik); }
@@ -703,3 +703,5 @@ ol, ul { list-style: none; }
 @media (hover: hover) and (pointer: fine) { .sc-man--live:hover .sc-call__lead { opacity: .6; } }
 /* F: the drawing sheet is paper-toned, not white */
 [data-mode="drawing"] body.ind { --pp: #DED8C7; background: var(--pp); }
+/* the headline column sits above the yard; the yard keeps its full size */
+@media (min-width: 1100px) { .in-left { align-self: stretch; padding-bottom: var(--scene-h, 0px); } }

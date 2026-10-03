@@ -226,16 +226,21 @@
   css.textContent = sheet.join("\n");
   document.head.append(css);
 
-  /* ── fit: the scene scales down rather than run under the headline and buttons.
-     Its drawing reaches 250 units above the ground (the step strip); that
-     height must fit between the buttons and the bottom of the page. */
+  /* ── fit: the scene always spans the page. It is the headline column
+     that makes room: the scene's drawing height (250 units above the
+     ground) is published as --scene-h, the column sits above it and the
+     headline shrinks only if the space left is short. */
   const wrap = host.closest(".in-wrap");
-  const paths = wrap && wrap.querySelector(".in-paths");
   const fit = () => {
-    if (!paths || getComputedStyle(host).display === "none") return;
-    const W = wrap.clientWidth, room = wrap.getBoundingClientRect().bottom - paths.getBoundingClientRect().bottom - 18;
-    const k = Math.max(0.35, Math.min(W / 1600, room / 250, 1.15));
+    if (!wrap) return;
+    if (getComputedStyle(host).display === "none") { wrap.style.removeProperty("--scene-h"); wrap.style.removeProperty("--h1-fit"); return; }
+    const k = Math.min(wrap.clientWidth / 1600, 1.15);
     host.style.height = 420 * k + "px";
+    const sceneH = 250 * k + 20;
+    wrap.style.setProperty("--scene-h", sceneH + "px");
+    const head = wrap.querySelector(".in-head"), paths = wrap.querySelector(".in-paths");
+    const room = wrap.clientHeight - head.offsetHeight - sceneH - paths.offsetHeight - 48 - 24; // gap + breathing room
+    wrap.style.setProperty("--h1-fit", Math.max(28, room / 2.85) + "px");
   };
   if (wrap) { new ResizeObserver(fit).observe(wrap); fit(); }
 
