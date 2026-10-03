@@ -225,11 +225,11 @@
   css.textContent = sheet.join("\n");
   document.head.append(css);
 
-  /* ── interaction (egg.html only) ────────────────────────
+  /* ── interaction (E always, F in drawing mode) ────────────────────────
      In drawing mode each worker carries an item balloon, as on an
      assembly drawing. Hover, focus or tap opens it: the trade and a link
      to apply. A tap also gets a jump out of the worker. */
-  if (!document.body.classList.contains("ind--egg")) return;
+  if (!document.body.classList.contains("ind--story")) return;
   host.removeAttribute("aria-hidden");
   [ink, props, steps].forEach((n) => n.setAttribute("aria-hidden", "true"));
   svg.setAttribute("role", "group");

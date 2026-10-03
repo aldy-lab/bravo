@@ -94,11 +94,12 @@
     el("path", { class: "in-node__hit", d: `M${ax0} ${ay0} A335 335 0 0 1 ${ax1} ${ay1}` }, li);
     const txt = el("text", { class: "in-node__t", dy: "-14" }, li);
     el("textPath", { href: "#in-label-ring", startOffset: `${((s.brg + 315) % 360) / 3.6}%`, "text-anchor": "middle" }, txt).textContent = s.title;
-    const g = el("g", { class: "in-target", style: `--i:${i}` }, tg);
+    const g = el("g", { class: "in-target", style: `--i:${i}`, "data-i": i }, tg);
     const vec = el("line", { class: "in-vec" }, g);
     const mark = el("g", { class: "in-layer" }, g);
     el("path", { class: "in-layer__wall", d: WALL }, mark);
     el("path", { class: "in-layer__top", d: LAYER }, mark);
+    el("circle", { class: "in-target__hit", r: 46 }, mark);
     return { ...s, i, li, g, vec, mark };
   });
 
@@ -205,13 +206,14 @@
   addEventListener("pointercancel", release);
 
   const onLink = (e) => {
-    const a = e.target.closest("a[data-i]");
+    const a = e.target.closest("[data-i]");
     if (!a) return;
     e.preventDefault();
     if (moved) { moved = false; return; }
     go(nodes[+a.dataset.i]);
   };
   list.addEventListener("click", onLink);
+  tg.addEventListener("click", onLink);
   list.addEventListener("focusin", (e) => {
     const a = e.target.closest("a[data-i]");
     if (a && !dragging) steer(nodes[+a.dataset.i].brg);
