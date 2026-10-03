@@ -1104,15 +1104,16 @@ ol, ul { list-style: none; }
 /* ── Variant E: the assembly scene behind the page ───── */
 .in-scene {
   position: absolute; left: 0; right: 0; bottom: 0; height: 46%; z-index: -1; pointer-events: none;
-  /* fade out upwards */
-  -webkit-mask-image: linear-gradient(to top, #000 60%, transparent);
-  mask-image: linear-gradient(to top, #000 60%, transparent);
+  -webkit-mask-image: linear-gradient(to top, #000 62%, transparent);
+  mask-image: linear-gradient(to top, #000 62%, transparent);
 }
 .in-scene svg { width: 100%; height: 100%; overflow: visible; }
 .in-scene svg * { vector-effect: non-scaling-stroke; }
 .sc-ink { fill: none; stroke: var(--ik); stroke-width: 1; opacity: .3; }
 .sc-ink .sc-rib, .sc-ink .sc-hatch { opacity: .5; }
-.sc-ground { opacity: 1; }
+.sc-props { fill: none; stroke: var(--ik); stroke-width: 1; }
+.sc-ink-line { opacity: .45; }
+.sc-beam { stroke: var(--ik); stroke-width: 1.4; opacity: .85; }
 .sc-crew { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; }
 .sc-leg line { stroke-width: 5.5; }
 .sc-arm line { stroke-width: 4.5; }
@@ -1121,71 +1122,119 @@ ol, ul { list-style: none; }
 .sc-band { stroke: var(--pp); stroke-width: 1.5; opacity: .55; }
 .sc-head { fill: var(--accent); stroke: none; }
 .sc-helmet { fill: var(--ik); stroke: var(--ik); stroke-width: 1.5; }
-.sc-beam { stroke: var(--ik); stroke-width: 1.5; opacity: .8; }
 .sc-tool { stroke: var(--ik); stroke-width: 2.5; }
 .sc-leg, .sc-arm { transform: rotate(var(--a)); }
+.sc-steps { fill: var(--ik-2); font: 600 12px var(--f-text); letter-spacing: .16em; }
+.sc-step { fill: var(--ik-2); opacity: .55; }
+[data-mode="drawing"] .sc-ink { opacity: .45; }
 
-/* walking: legs swing, the pair crosses the yard and fades at the ends */
-.sc-walker .sc-leg--l { animation: sc-step .9s ease-in-out infinite alternate; }
-.sc-walker .sc-leg--r { animation: sc-step .9s ease-in-out infinite alternate-reverse; }
-.sc-walker--b .sc-leg--l { animation-delay: -.45s; } .sc-walker--b .sc-leg--r { animation-delay: -.45s; }
-@keyframes sc-step { from { transform: rotate(calc(var(--a) - 20deg)); } to { transform: rotate(calc(var(--a) + 20deg)); } }
-.sc-carry { animation: sc-cross 18s linear infinite; }
-@keyframes sc-cross {
-  0% { transform: translateX(-30px); opacity: 0; } 6% { opacity: 1; }
-  92% { opacity: 1; } 100% { transform: translateX(270px); opacity: 0; }
+/* ── the story: one 30 s timeline ─────────────────────── */
+.in-scene { --T: 30s; --io: cubic-bezier(0.77, 0, 0.175, 1); }
+.sc-carry, .sc-beam--carried, .sc-trolley, .sc-hook, .sc-cable, .sc-beam--hung, .sc-weldwin, .sc-step, .sc-walker .sc-arm, .sc-walker .sc-leg {
+  animation-duration: var(--T); animation-iteration-count: infinite; animation-timing-function: linear;
 }
 
-/* welding: the torch flickers, sparks spray and fade */
+/* 01 deliver: lift off the stack, walk to the crane, set down, walk back empty */
+.sc-carry { animation-name: sc-carry; }
+@keyframes sc-carry {
+  0%, 4% { transform: translateX(0); }
+  32%, 40% { transform: translateX(-770px); }
+  68%, 100% { transform: translateX(0); }
+}
+.sc-beam--carried { animation-name: sc-carried; }
+@keyframes sc-carried {
+  0% { transform: translate(0, 0); opacity: 1; animation-timing-function: var(--io); }
+  4% { transform: translate(0, -37px); }
+  32% { transform: translate(-770px, -37px); animation-timing-function: var(--io); }
+  37%, 52% { transform: translate(-770px, 26px); opacity: 1; }
+  52.2%, 99.8% { opacity: 0; }
+  99.8% { transform: translate(0, 0); }
+  100% { transform: translate(0, 0); opacity: 1; }
+}
+.sc-walker .sc-arm--l { animation-name: sc-arm-l; }
+.sc-walker .sc-arm--r { animation-name: sc-arm-r; }
+@keyframes sc-arm-l { 0% { transform: rotate(8deg); animation-timing-function: var(--io); } 4%, 32% { transform: rotate(172deg); animation-timing-function: var(--io); } 37%, 100% { transform: rotate(8deg); } }
+@keyframes sc-arm-r { 0% { transform: rotate(-8deg); animation-timing-function: var(--io); } 4%, 32% { transform: rotate(188deg); animation-timing-function: var(--io); } 37%, 100% { transform: rotate(-8deg); } }
+/* legs: keyframes generated in in-scene.js, a stride every 0.45 s inside the two walks */
+.sc-walker .sc-leg--l { animation-name: sc-stride-a; }
+.sc-walker .sc-leg--r { animation-name: sc-stride-b; }
+.sc-walker--b .sc-leg--l { animation-name: sc-stride-b; }
+.sc-walker--b .sc-leg--r { animation-name: sc-stride-a; }
+
+/* 02 lift and 03 set: trolley over, hook down, up, back over the block, down, release */
+.sc-trolley { animation-name: sc-trolley; }
+@keyframes sc-trolley {
+  0%, 40% { transform: translateX(0); animation-timing-function: var(--io); }
+  46%, 58% { transform: translateX(285px); animation-timing-function: var(--io); }
+  66%, 100% { transform: translateX(0); }
+}
+.sc-hook { animation-name: sc-hook; }
+@keyframes sc-hook {
+  0%, 46% { transform: translateY(0); animation-timing-function: var(--io); }
+  50%, 52% { transform: translateY(118px); animation-timing-function: var(--io); }
+  56%, 66% { transform: translateY(0); animation-timing-function: var(--io); }
+  72%, 74% { transform: translateY(30px); animation-timing-function: var(--io); }
+  78%, 100% { transform: translateY(0); }
+}
+.sc-cable { transform-box: view-box; animation-name: sc-cable; }
+@keyframes sc-cable {
+  0%, 46% { transform: scaleY(1); animation-timing-function: var(--io); }
+  50%, 52% { transform: scaleY(4.933); animation-timing-function: var(--io); }
+  56%, 66% { transform: scaleY(1); animation-timing-function: var(--io); }
+  72%, 74% { transform: scaleY(2); animation-timing-function: var(--io); }
+  78%, 100% { transform: scaleY(1); }
+}
+.sc-beam--hung { animation-name: sc-hung; }
+@keyframes sc-hung { 0%, 51.9% { opacity: 0; } 52%, 74% { opacity: .85; } 74.1%, 100% { opacity: 0; } }
+/* the first landing leaves a beam on the block for good */
+.sc-beam--placed { opacity: 0; animation: sc-placed var(--T) linear 1 forwards; }
+@keyframes sc-placed { 0%, 73.9% { opacity: 0; } 74%, 100% { opacity: .85; } }
+
+/* 04 weld: sparks only while the seam is run */
+.sc-weldwin { animation-name: sc-weldwin; }
+@keyframes sc-weldwin { 0%, 76% { opacity: 0; } 77%, 94% { opacity: 1; } 95%, 100% { opacity: 0; } }
 .sc-glow { fill: var(--accent); stroke: none; animation: sc-glow .18s steps(2) infinite; }
 @keyframes sc-glow { 50% { opacity: .35; } }
-.sc-spark { stroke-width: 1.5; transform: rotate(var(--r)) translateX(0); opacity: 0; animation: sc-spark .7s cubic-bezier(0.23, 1, 0.32, 1) infinite; animation-delay: var(--d); }
+.sc-spark { stroke-width: 1.5; transform: rotate(var(--r)); opacity: 0; animation: sc-spark .7s cubic-bezier(0.23, 1, 0.32, 1) infinite; animation-delay: var(--d); }
 @keyframes sc-spark { 0% { opacity: 1; transform: rotate(var(--r)) translateX(2px); } 100% { opacity: 0; transform: rotate(var(--r)) translateX(24px); } }
 .sc-welder .sc-arm--r { animation: sc-weld 3.2s ease-in-out infinite alternate; }
 @keyframes sc-weld { from { transform: rotate(calc(var(--a) - 6deg)); } to { transform: rotate(calc(var(--a) + 6deg)); } }
-
-/* the crane lowers its section, the rigger guides it in */
-.sc-cable { transform-box: view-box; animation: sc-cable 7s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate; }
-.sc-load { animation: sc-load 7s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate; }
-@keyframes sc-cable { from { transform: scaleY(1); } 70%, to { transform: scaleY(2.6); } }
-@keyframes sc-load { from { transform: translateY(0); } 70%, to { transform: translateY(22px); } }
 .sc-rigger .sc-arm--l { animation: sc-wave 1.8s ease-in-out infinite alternate; }
 @keyframes sc-wave { from { transform: rotate(calc(var(--a) - 14deg)); } to { transform: rotate(calc(var(--a) + 8deg)); } }
 
-/* the bolter turns the wrench in short pulls */
-.sc-bolter .sc-arm--r { animation: sc-bolt .55s ease-in-out infinite alternate; }
-@keyframes sc-bolt { from { transform: rotate(calc(var(--a) - 22deg)); } to { transform: rotate(calc(var(--a) + 10deg)); } }
-
-[data-mode="drawing"] .sc-ink { opacity: .45; }
+/* the story strip lights the step in progress */
+.sc-step--1 { animation-name: sc-s1; } .sc-step--2 { animation-name: sc-s2; } .sc-step--3 { animation-name: sc-s3; } .sc-step--4 { animation-name: sc-s4; }
+@keyframes sc-s1 { 0%, 37% { fill: var(--accent); opacity: 1; } 37.5%, 100% { fill: var(--ik-2); opacity: .55; } }
+@keyframes sc-s2 { 0%, 39.5% { fill: var(--ik-2); opacity: .55; } 40%, 58% { fill: var(--accent); opacity: 1; } 58.5%, 100% { fill: var(--ik-2); opacity: .55; } }
+@keyframes sc-s3 { 0%, 58% { fill: var(--ik-2); opacity: .55; } 58.5%, 76% { fill: var(--accent); opacity: 1; } 76.5%, 100% { fill: var(--ik-2); opacity: .55; } }
+@keyframes sc-s4 { 0%, 76% { fill: var(--ik-2); opacity: .55; } 76.5%, 96% { fill: var(--accent); opacity: 1; } 96.5%, 100% { fill: var(--ik-2); opacity: .55; } }
 
 @media (prefers-reduced-motion: reduce) {
   .in-scene * { animation: none !important; }
-  .sc-spark { opacity: 0; }
+  .sc-weldwin { opacity: 0; }
+  .sc-beam--placed { opacity: .85; }
 }
-@media (max-width: 1099px) { .in-scene { display: none; } } /* stacked: the board fills the screen and the buttons would sit on the crew */
+@media (max-width: 1099px) { .in-scene { display: none; } } /* stacked: the board fills the screen */
 
-/* ── Variant F (egg.html): variant E, but the yard only appears with the egg ── */
+/* ── Variant F (egg.html): the yard only appears with the egg ── */
 .ind--egg .in-scene { opacity: 0; transition: opacity .6s cubic-bezier(0.23, 1, 0.32, 1); }
 .ind--egg .in-scene * { animation-play-state: paused; }
-.ind--egg .sc-ink { transition: opacity .8s cubic-bezier(0.23, 1, 0.32, 1); }
-.ind--egg .sc-man, .ind--egg .sc-sparks, .ind--egg .sc-carry > .sc-beam { opacity: 0; transform-box: fill-box; transition: opacity .5s cubic-bezier(0.23, 1, 0.32, 1), translate .7s cubic-bezier(0.23, 1, 0.32, 1); translate: 0 14px; }
+.ind--egg :is(.sc-man, .sc-sparks) { opacity: 0; transition: opacity .5s cubic-bezier(0.23, 1, 0.32, 1), translate .7s cubic-bezier(0.23, 1, 0.32, 1); translate: 0 14px; }
 [data-mode="drawing"] .ind--egg .in-scene { opacity: 1; }
 [data-mode="drawing"] .ind--egg .in-scene * { animation-play-state: running; }
-[data-mode="drawing"] .ind--egg :is(.sc-man, .sc-sparks, .sc-carry > .sc-beam) { opacity: 1; translate: 0 0; }
-/* the crew turns up one by one, after the sheet has turned white */
+[data-mode="drawing"] .ind--egg :is(.sc-man, .sc-sparks) { opacity: 1; translate: 0 0; }
 [data-mode="drawing"] .ind--egg .sc-crew > :nth-child(1) { transition-delay: .55s; }
 [data-mode="drawing"] .ind--egg .sc-crew > :nth-child(2) { transition-delay: .65s; }
 [data-mode="drawing"] .ind--egg .sc-crew > :nth-child(3) { transition-delay: .8s; }
-[data-mode="drawing"] .ind--egg .sc-crew > :nth-child(4) { transition-delay: .95s; }
-[data-mode="drawing"] .ind--egg .sc-carry > * { transition-delay: 1.1s; }
+[data-mode="drawing"] .ind--egg .sc-carry .sc-man { transition-delay: .95s; }
 @media (max-width: 1099px) {
-  /* on stacked layouts the egg makes room at the bottom and the yard runs there, under the buttons */
   .ind--egg .in-scene { display: block; height: 96px; -webkit-mask-image: none; mask-image: none; }
+  .ind--egg .sc-steps { display: none; }
   .ind--egg .in-body { transition: padding-bottom .6s cubic-bezier(0.23, 1, 0.32, 1); }
   [data-mode="drawing"] .ind--egg .in-body { padding-bottom: 104px; }
   [data-mode="drawing"] .ind--egg .in-board { --b: min(calc(100vw - 2 * var(--gutter)), 540px, calc(100svh - 104px - var(--h1) * 2.7 - 204px)); }
 }
-@media (prefers-reduced-motion: reduce) { .ind--egg :is(.sc-man, .sc-sparks, .sc-carry > .sc-beam) { translate: none; transition: opacity .3s; } }
+@media (prefers-reduced-motion: reduce) { .ind--egg :is(.sc-man, .sc-sparks) { translate: none; transition: opacity .3s; } }
 
 /* ── Variant F: the crew answers back (drawing mode only) ── */
 .sc-call { visibility: hidden; opacity: 0; transition: opacity .4s cubic-bezier(0.23, 1, 0.32, 1), visibility 0s .4s; }
@@ -1200,8 +1249,9 @@ ol, ul { list-style: none; }
 .sc-call__a:hover text { text-decoration: underline; }
 .sc-hit { fill: transparent; stroke: none; }
 [data-mode="drawing"] .ind--egg .in-scene { pointer-events: none; }
-[data-mode="drawing"] .ind--egg :is(.sc-man--live, .sc-hit--crane) { pointer-events: auto; cursor: pointer; }
+[data-mode="drawing"] .ind--egg .sc-man--live { pointer-events: auto; cursor: pointer; }
 [data-mode="drawing"] .ind--egg .sc-man--live.is-open .sc-call__tag { pointer-events: auto; }
+.sc-man--live { outline: none; }
 .sc-man--live.is-open .sc-call__ball, .sc-man--live:focus-within .sc-call__ball { fill: var(--accent); stroke: var(--accent); }
 .sc-man--live.is-open .sc-call__no { fill: #fff; }
 .sc-man--live.is-open .sc-call__tag, .sc-man--live:focus-within .sc-call__tag { opacity: 1; translate: 0 0; }
@@ -1209,24 +1259,13 @@ ol, ul { list-style: none; }
   .sc-man--live:hover .sc-call__ball { stroke: var(--accent); }
   .sc-man--live:hover .sc-call__tag { opacity: 1; translate: 0 0; pointer-events: auto; }
 }
-/* the main content must not swallow taps meant for the yard */
 .ind--egg .in-body { pointer-events: none; }
 .ind--egg .in-left > *, .ind--egg .in-board { pointer-events: auto; }
-
-/* reactions */
-.sc-burst .sc-arm--r { animation-duration: .4s; }
-.ind--egg .sc-sparks { transition: scale .3s; }
-.sc-hurry .sc-arm { animation-duration: .25s !important; }
-.sc-halt { animation-play-state: paused; }
-.sc-carry:has(.sc-halt) { animation-play-state: paused; }
-.sc-carry:has(.sc-halt) .sc-leg { animation-play-state: paused; }
+.in-scene:has(.sc-welder.is-open) .sc-weldwin { animation: none; opacity: 1; }
 .in-scene:has(.sc-welder.is-open) .sc-spark { animation-duration: .35s; stroke-width: 2.5; }
 .in-scene:has(.sc-welder.is-open) .sc-sparks { scale: 1.8; }
-/* crane on demand */
-.in-scene svg.is-lowered .sc-cable { animation: none; transform: scaleY(2.6); transition: transform 1.6s cubic-bezier(0.77, 0, 0.175, 1); }
-.in-scene svg.is-lowered .sc-load { animation: none; transform: translateY(22px); transition: transform 1.6s cubic-bezier(0.77, 0, 0.175, 1); }
-@media (max-width: 1099px) { .sc-call__tag { display: none; } .sc-call { display: none; } }
+@media (max-width: 1099px) { .sc-call { display: none; } }
+
 /* drawing furniture on the board never takes a click meant for a label */
 .in-dwg, .in-board [data-card], .in-board [data-targets], .in-hub, .in-lubber { pointer-events: none; }
 .in-node__hit { fill: none; stroke: transparent; stroke-width: 70; vector-effect: none !important; pointer-events: stroke; }
-.sc-man--live { outline: none; }
