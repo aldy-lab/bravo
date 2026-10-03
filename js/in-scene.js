@@ -442,43 +442,17 @@
     const w = shot.h * (host.clientWidth / STRIP);
     svg.setAttribute("viewBox", `${(shot.x - w * 0.3).toFixed(1)} ${420 - shot.h} ${w.toFixed(1)} ${shot.h}`);
   };
-  /* between screens the crew does not fade: they jump. The crew of the screen
-     being left crouches and leaps out of frame along an arc; the crew of the
-     next screen leaps in from the other side and lands with a give in the
-     knees. Forward through the page they travel right, back up the page left. */
-  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  /* the layer for the section in view; js/runners.js brings its crew in over the page */
   let shown = null;
-  const leap = (men, dir, out) => men.forEach((m, i) => {
-    if (!m.animate) return;
-    const d = dir * (1 + (i % 3) * 0.18);
-    const frames = out
-      ? [{ translate: "0px 0px", opacity: 1 }, { translate: "0px 7px", offset: 0.16 }, { translate: `${d * 140}px -230px`, offset: 0.62 }, { translate: `${d * 300}px -470px`, opacity: 0 }]
-      : [{ translate: `${-d * 300}px -470px`, opacity: 0 }, { translate: `${-d * 140}px -230px`, opacity: 1, offset: 0.38 }, { translate: "0px 0px", offset: 0.8 }, { translate: "0px 7px", offset: 0.9 }, { translate: "0px 0px", opacity: 1 }];
-    m.animate(frames, { duration: out ? 620 : 760, delay: (out ? 0 : 260) + i * 70, easing: "cubic-bezier(0.33, 0, 0.25, 1)", fill: out ? "forwards" : "backwards" });
-  });
   const show = () => {
     const st = (wrapEl && wrapEl.dataset.step) || "0";
     const next = layers.find((l) => l.dataset.for === st);
     if (next === shown) { aim(); return; }
     const prev = shown;
     shown = next;
-    if (prev && next && !still.matches) {
-      const dir = +next.dataset.for > +prev.dataset.for ? 1 : -1;
-      const outMen = [...prev.querySelectorAll(".sc-man")];
-      prev.classList.add("is-leaving");
-      leap(outMen, dir, true);
-      clearTimeout(prev._t);
-      prev._t = setTimeout(() => {
-        prev.classList.remove("is-leaving");
-        // put them back only once their layer has faded out, or they flash in place
-        prev._t = setTimeout(() => { if (prev !== shown) outMen.forEach((m) => m.getAnimations().forEach((an) => { if (an.effect && an.effect.getKeyframes().some((k) => k.translate)) an.cancel(); })); }, 700);
-      }, 620 + outMen.length * 70 + 60);
-      clearTimeout(next._t); next.classList.remove("is-leaving");
-      next.querySelectorAll(".sc-man").forEach((m) => m.getAnimations().forEach((an) => { if (an.effect && an.effect.getKeyframes().some((k) => k.translate)) an.cancel(); }));
-      leap([...next.querySelectorAll(".sc-man")], dir, false);
-    }
     layers.forEach((l) => l.classList.toggle("is-on", l === next));
     aim();
+    if (prev) host.dispatchEvent(new CustomEvent("scene:show", { detail: { layer: next, prev } }));
   };
   if (wrapEl) new MutationObserver(show).observe(wrapEl, { attributes: true, attributeFilter: ["data-step"] });
   show();
