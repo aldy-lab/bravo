@@ -23,7 +23,7 @@
     if (parent) parent.append(n);
     return n;
   };
-  const svg = el("svg", { viewBox: "0 0 1600 420", preserveAspectRatio: "xMidYMax slice" }, host);
+  const svg = el("svg", { viewBox: "0 0 1600 420", preserveAspectRatio: "xMidYMax meet" }, host);
   const ink = el("g", { class: "sc-ink" }, svg);
   const props = el("g", { class: "sc-props" }, svg); // beams that move: drawn in ink, above the structure
   const crew = el("g", { class: "sc-crew" }, svg);
@@ -31,8 +31,9 @@
   const beam = (x, y, len, parent, cls = "sc-beam") => el("path", { d: `M${x} ${y}h${len} M${x} ${y + 6}h${len} M${x} ${y}v6 M${x + len} ${y}v6`, class: cls }, parent);
 
   /* ── structure ─────────────────────────────────────────── */
-  el("line", { x1: 0, y1: G, x2: 1600, y2: G, class: "sc-ground" }, ink);
-  for (let x = 0; x < 1600; x += 14) el("line", { x1: x, y1: G + 2, x2: x - 10, y2: G + 12, class: "sc-hatch" }, ink);
+  // the ground runs past the drawing both ways, so a scaled-down scene still meets the screen edges
+  el("line", { x1: -1600, y1: G, x2: 3200, y2: G, class: "sc-ground" }, ink);
+  for (let x = -1600; x < 3200; x += 14) el("line", { x1: x, y1: G + 2, x2: x - 10, y2: G + 12, class: "sc-hatch" }, ink);
 
   // hull block on stands
   const bx = 170, bw = 230, by = 322, bh = 58, dx = 40, dy = -30;
@@ -224,6 +225,19 @@
   const css = document.createElement("style");
   css.textContent = sheet.join("\n");
   document.head.append(css);
+
+  /* ── fit: the scene scales down rather than run under the headline and buttons.
+     Its drawing reaches 250 units above the ground (the step strip); that
+     height must fit between the buttons and the bottom of the page. */
+  const wrap = host.closest(".in-wrap");
+  const paths = wrap && wrap.querySelector(".in-paths");
+  const fit = () => {
+    if (!paths || getComputedStyle(host).display === "none") return;
+    const W = wrap.clientWidth, room = wrap.getBoundingClientRect().bottom - paths.getBoundingClientRect().bottom - 18;
+    const k = Math.max(0.35, Math.min(W / 1600, room / 250, 1.15));
+    host.style.height = 420 * k + "px";
+  };
+  if (wrap) { new ResizeObserver(fit).observe(wrap); fit(); }
 
   /* ── interaction (E always, F in drawing mode) ────────────────────────
      In drawing mode each worker carries an item balloon, as on an
