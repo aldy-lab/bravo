@@ -1,6 +1,8 @@
-/* Hero variant E: variant D in the Bravo language — white ink on brand blue,
-   with the pages as a product-style spec list. Self-contained like the
-   other variants, so it can be deleted on its own. */
+/* Hero variant E: the home page laid out like a page of the Bravo brand
+   book — running header, a Contents list whose page numbers are bearings,
+   the radial-tick graphic element as the board, the emblem's isometric
+   layers as targets, and one word across the bottom like the cover.
+   Self-contained like the other variants, so it can be deleted on its own. */
 (() => {
   "use strict";
   const board = document.querySelector("[data-in-board]");
@@ -8,7 +10,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg";
-  const C = 500, R = 440, STEP = 90;
+  const C = 500, R = 430, STEP = 90;
   const el = (name, attrs, parent) => {
     const n = document.createElementNS(NS, name);
     for (const k in attrs) n.setAttribute(k, attrs[k]);
@@ -19,47 +21,53 @@
   const norm = (d) => ((d % 360) + 360) % 360;
 
   const SECTIONS = [
-    { brg: 0,   rng: 250, href: "services.html", title: "Services", sub: "Field teams · engineering · supervision", text: "Field teams, engineering and supervision for industrial projects." },
-    { brg: 90,  rng: 240, href: "projects.html", title: "Projects", sub: "References · BravoDoc", text: "Projects we staff, and BravoDoc — our validator for engineering documents." },
-    { brg: 180, rng: 250, href: "careers.html",  title: "Careers", sub: "Vacancies · apply online", text: "Open positions for welders, fitters, electricians and engineers." },
-    { brg: 270, rng: 240, href: "contact.html",  title: "Contact", sub: "Project inquiry", text: "Tell us about your project and the team you need." },
+    { brg: 0,   rng: 270, href: "services.html", title: "Services", text: "Field teams, engineering and supervision for industrial projects." },
+    { brg: 90,  rng: 250, href: "projects.html", title: "Projects", text: "Projects we staff, and BravoDoc — our validator for engineering documents." },
+    { brg: 180, rng: 270, href: "careers.html",  title: "Careers",  text: "Open positions for welders, fitters, electricians and engineers." },
+    { brg: 270, rng: 250, href: "contact.html",  title: "Contact",  text: "Tell us about your project and the team you need." },
   ];
 
-  // the card: bold ink scale, a few rings, numbers in the poster face
+  /* the card: the brand book's graphic element — a crown of fine radial
+     ticks round the centre, thin rings, and a degree scale at the rim */
   const card = $("[data-card]", board);
   el("circle", { class: "in-ring in-ring--rim", cx: C, cy: C, r: R }, card);
-  [120, 240, 360].forEach((r) => el("circle", { class: "in-ring", cx: C, cy: C, r }, card));
-  for (let d = 0; d < 360; d += 30) el("line", { class: "in-spoke", x1: C, y1: C - 40, x2: C, y2: C - 360, transform: `rotate(${d} ${C} ${C})` }, card);
-  for (let d = 0; d < 360; d += 2) {
-    const big = d % 10 === 0;
-    el("line", { class: big ? "in-tick in-tick--big" : "in-tick", x1: C, y1: C - R, x2: C, y2: C - R + (big ? 34 : 16), transform: `rotate(${d} ${C} ${C})` }, card);
+  [110, 330].forEach((r) => el("circle", { class: "in-ring", cx: C, cy: C, r }, card));
+  el("circle", { class: "in-ring in-ring--dash", cx: C, cy: C, r: 220 }, card);
+  for (let d = 0; d < 360; d += 6) { // the crown
+    const long = d % 30 === 0;
+    el("line", { class: "in-crown", x1: C, y1: C - 132, x2: C, y2: C - (long ? 178 : 158), transform: `rotate(${d} ${C} ${C})` }, card);
   }
-  for (let d = 0; d < 360; d += 30) el("text", { class: "in-num", x: C, y: C - R + 66, transform: `rotate(${d} ${C} ${C})` }, card).textContent = brg3(d);
+  for (let d = 0; d < 360; d++) {
+    const len = d % 10 === 0 ? 18 : d % 5 === 0 ? 11 : 5;
+    el("line", { class: d % 10 === 0 ? "in-tick in-tick--10" : "in-tick", x1: C, y1: C - R, x2: C, y2: C - R + len, transform: `rotate(${d} ${C} ${C})` }, card);
+  }
+  for (let d = 0; d < 360; d += 30) el("text", { class: "in-num", x: C, y: C - R + 40, transform: `rotate(${d} ${C} ${C})` }, card).textContent = brg3(d);
 
-  // the brand book's coordinate sheet along the screen edges
-  const rx = $("[data-rule-x]"), ry = $("[data-rule-y]");
-  for (let v = -30; v <= 30; v += 10) rx.insertAdjacentHTML("beforeend", `<span>${v}</span>`);
-  for (let v = 20; v >= -20; v -= 10) ry.insertAdjacentHTML("beforeend", `<span>${v}</span>`);
-
+  /* targets: the emblem's isometric layer, drawn flat on the sheet */
+  const LAYER = "M0 -22 L40 -6 L0 10 L-40 -6 Z";
+  const WALL = "M-40 -6 L0 10 L0 22 L-40 6 Z";
   const tg = $("[data-targets]", board), list = $("[data-nodes]", board), spec = $("[data-spec]");
   const nodes = SECTIONS.map((s, i) => {
     const li = document.createElement("li");
     li.className = "in-node";
-    li.innerHTML = `<a href="${s.href}" data-i="${i}"><span>${s.title}</span></a>`;
+    li.innerHTML = `<a href="${s.href}" data-i="${i}">${s.title}</a>`;
     list.append(li);
     const row = document.createElement("li");
-    row.innerHTML = `<a href="${s.href}" data-i="${i}"><span class="in-spec__no">TT–0${i + 1}</span><span class="in-spec__name">${s.title}<small>${s.sub}</small></span><span class="in-spec__v">${brg3(s.brg)}°</span></a>`;
+    row.innerHTML = `<a href="${s.href}" data-i="${i}"><span class="in-contents__n">${brg3(s.brg)}</span><span class="in-contents__t">${s.title}</span></a>`;
     spec.append(row);
     const g = el("g", { class: "in-target" }, tg);
-    const vec = el("line", { class: "in-vec", "marker-end": "url(#in-arrow)" }, g);
-    const dot = el("circle", { class: "in-dot", r: 22 }, g);
-    return { ...s, li, row, g, vec, dot };
+    const vec = el("line", { class: "in-vec" }, g);
+    const mark = el("g", { class: "in-layer" }, g);
+    el("path", { class: "in-layer__wall", d: WALL }, mark);
+    el("path", { class: "in-layer__top", d: LAYER }, mark);
+    return { ...s, i, li, row, g, vec, mark };
   });
 
   let heading = 0, target = 0, active = -1, raf = 0, last = 0, onArrive = null;
   const shortest = (from, to) => from + (((to - from) % 360) + 540) % 360 - 180;
   const nearest = (h) => Math.round(h / STEP) * STEP;
   const read = { title: $('[data-r="title"]'), text: $('[data-r="text"]'), href: $('[data-r="href"]') };
+  const page = $("[data-page]");
 
   function layout() {
     const k = board.clientWidth / 1000;
@@ -68,13 +76,11 @@
       const phi = (n.brg - heading) * Math.PI / 180;
       const sx = Math.sin(phi), sy = -Math.cos(phi);
       const x = C + n.rng * sx, y = C + n.rng * sy;
-      n.dot.setAttribute("cx", x); n.dot.setAttribute("cy", y);
-      n.vec.setAttribute("x1", x - 30 * sx); n.vec.setAttribute("y1", y - 30 * sy);
-      n.vec.setAttribute("x2", x - 120 * sx); n.vec.setAttribute("y2", y - 120 * sy);
+      n.mark.setAttribute("transform", `translate(${x} ${y})`);
+      n.vec.setAttribute("x1", x - 34 * sx); n.vec.setAttribute("y1", y - 34 * sy);
+      n.vec.setAttribute("x2", C - 190 * sx); n.vec.setAttribute("y2", C - 190 * sy);
       n.li.style.transform = `translate(${x * k}px, ${y * k}px)`;
       n.li.classList.toggle("is-low", sy > 0.5);
-      n.li.classList.toggle("is-side", Math.abs(sx) > 0.5);
-      n.li.classList.toggle("is-right", sx > 0.5);
     });
     const idx = nodes.findIndex((n) => n.brg === norm(nearest(heading)));
     if (idx !== active) {
@@ -82,13 +88,14 @@
       nodes.forEach((n, i) => [n.li, n.row, n.g].forEach((e) => e.classList.toggle("is-active", i === idx)));
       const n = nodes[idx];
       read.title.textContent = n.title; read.text.textContent = n.text; read.href.href = n.href;
+      page.textContent = String(idx + 1).padStart(3, "0");
     }
   }
 
   function tick(now) {
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     if (!dragging) {
-      heading += (target - heading) * (1 - Math.exp(-dt * 9));
+      heading += (target - heading) * (1 - Math.exp(-dt * 8));
       if (Math.abs(target - heading) < 0.05) heading = target;
     }
     layout();
@@ -172,9 +179,9 @@
   const align = () => {
     const w = wrap.getBoundingClientRect(), b = board.getBoundingClientRect();
     wrap.style.setProperty("--in-cx", (b.left + b.width / 2 - w.left) + "px");
-    wrap.style.setProperty("--in-nav", $(".in-nav").offsetHeight + "px");
+    wrap.style.setProperty("--in-cy", (b.top + b.height / 2 - w.top) + "px");
   };
   new ResizeObserver(align).observe(wrap);
-  new ResizeObserver(layout).observe(board);
+  new ResizeObserver(() => { layout(); align(); }).observe(board);
   layout();
 })();
