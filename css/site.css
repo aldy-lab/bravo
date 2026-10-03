@@ -1129,19 +1129,19 @@ ol, ul { list-style: none; }
 [data-mode="drawing"] .sc-ink { opacity: .45; }
 
 /* ── the story: one 30 s timeline ─────────────────────── */
-.in-scene { --T: 30s; --io: cubic-bezier(0.77, 0, 0.175, 1); }
-.sc-carry, .sc-beam--carried, .sc-trolley, .sc-hook, .sc-cable, .sc-beam--hung, .sc-weldwin, .sc-step, .sc-walker .sc-arm, .sc-walker .sc-leg {
+.ind--egg .in-scene { --T: 30s; --io: cubic-bezier(0.77, 0, 0.175, 1); }
+.ind--egg .sc-carry, .ind--egg .sc-beam--carried, .ind--egg .sc-trolley, .ind--egg .sc-hook, .ind--egg .sc-cable, .ind--egg .sc-beam--hung, .ind--egg .sc-weldwin, .ind--egg .sc-step, .ind--egg .sc-walker .sc-arm, .ind--egg .sc-walker .sc-leg {
   animation-duration: var(--T); animation-iteration-count: infinite; animation-timing-function: linear;
 }
 
 /* 01 deliver: lift off the stack, walk to the crane, set down, walk back empty */
-.sc-carry { animation-name: sc-carry; }
+.ind--egg .sc-carry { animation-name: sc-carry; }
 @keyframes sc-carry {
   0%, 4% { transform: translateX(0); }
   32%, 40% { transform: translateX(-770px); }
   68%, 100% { transform: translateX(0); }
 }
-.sc-beam--carried { animation-name: sc-carried; }
+.ind--egg .sc-beam--carried { animation-name: sc-carried; }
 @keyframes sc-carried {
   0% { transform: translate(0, 0); opacity: 1; animation-timing-function: var(--io); }
   4% { transform: translate(0, -37px); }
@@ -1151,24 +1151,24 @@ ol, ul { list-style: none; }
   99.8% { transform: translate(0, 0); }
   100% { transform: translate(0, 0); opacity: 1; }
 }
-.sc-walker .sc-arm--l { animation-name: sc-arm-l; }
-.sc-walker .sc-arm--r { animation-name: sc-arm-r; }
+.ind--egg .sc-walker .sc-arm--l { animation-name: sc-arm-l; }
+.ind--egg .sc-walker .sc-arm--r { animation-name: sc-arm-r; }
 @keyframes sc-arm-l { 0% { transform: rotate(8deg); animation-timing-function: var(--io); } 4%, 32% { transform: rotate(172deg); animation-timing-function: var(--io); } 37%, 100% { transform: rotate(8deg); } }
 @keyframes sc-arm-r { 0% { transform: rotate(-8deg); animation-timing-function: var(--io); } 4%, 32% { transform: rotate(188deg); animation-timing-function: var(--io); } 37%, 100% { transform: rotate(-8deg); } }
 /* legs: keyframes generated in in-scene.js, a stride every 0.45 s inside the two walks */
-.sc-walker .sc-leg--l { animation-name: sc-stride-a; }
-.sc-walker .sc-leg--r { animation-name: sc-stride-b; }
-.sc-walker--b .sc-leg--l { animation-name: sc-stride-b; }
-.sc-walker--b .sc-leg--r { animation-name: sc-stride-a; }
+.ind--egg .sc-walker .sc-leg--l { animation-name: sc-stride-a; }
+.ind--egg .sc-walker .sc-leg--r { animation-name: sc-stride-b; }
+.ind--egg .sc-walker--b .sc-leg--l { animation-name: sc-stride-b; }
+.ind--egg .sc-walker--b .sc-leg--r { animation-name: sc-stride-a; }
 
 /* 02 lift and 03 set: trolley over, hook down, up, back over the block, down, release */
-.sc-trolley { animation-name: sc-trolley; }
+.ind--egg .sc-trolley { animation-name: sc-trolley; }
 @keyframes sc-trolley {
   0%, 40% { transform: translateX(0); animation-timing-function: var(--io); }
   46%, 58% { transform: translateX(285px); animation-timing-function: var(--io); }
   66%, 100% { transform: translateX(0); }
 }
-.sc-hook { animation-name: sc-hook; }
+.ind--egg .sc-hook { animation-name: sc-hook; }
 @keyframes sc-hook {
   0%, 46% { transform: translateY(0); animation-timing-function: var(--io); }
   50%, 52% { transform: translateY(118px); animation-timing-function: var(--io); }
@@ -1176,7 +1176,7 @@ ol, ul { list-style: none; }
   72%, 74% { transform: translateY(30px); animation-timing-function: var(--io); }
   78%, 100% { transform: translateY(0); }
 }
-.sc-cable { transform-box: view-box; animation-name: sc-cable; }
+.ind--egg .sc-cable { transform-box: view-box; animation-name: sc-cable; }
 @keyframes sc-cable {
   0%, 46% { transform: scaleY(1); animation-timing-function: var(--io); }
   50%, 52% { transform: scaleY(4.933); animation-timing-function: var(--io); }
@@ -1184,26 +1184,26 @@ ol, ul { list-style: none; }
   72%, 74% { transform: scaleY(2); animation-timing-function: var(--io); }
   78%, 100% { transform: scaleY(1); }
 }
-.sc-beam--hung { animation-name: sc-hung; }
+.ind--egg .sc-beam--hung { animation-name: sc-hung; }
 @keyframes sc-hung { 0%, 51.9% { opacity: 0; } 52%, 74% { opacity: .85; } 74.1%, 100% { opacity: 0; } }
 /* the first landing leaves a beam on the block for good */
-.sc-beam--placed { opacity: 0; animation: sc-placed var(--T) linear 1 forwards; }
+.ind--egg .sc-beam--placed { opacity: 0; animation: sc-placed var(--T) linear 1 forwards; }
 @keyframes sc-placed { 0%, 73.9% { opacity: 0; } 74%, 100% { opacity: .85; } }
 
 /* 04 weld: sparks only while the seam is run */
-.sc-weldwin { animation-name: sc-weldwin; }
+.ind--egg .sc-weldwin { animation-name: sc-weldwin; }
 @keyframes sc-weldwin { 0%, 76% { opacity: 0; } 77%, 94% { opacity: 1; } 95%, 100% { opacity: 0; } }
-.sc-glow { fill: var(--accent); stroke: none; animation: sc-glow .18s steps(2) infinite; }
+.ind--egg .sc-glow { fill: var(--accent); stroke: none; animation: sc-glow .18s steps(2) infinite; }
 @keyframes sc-glow { 50% { opacity: .35; } }
-.sc-spark { stroke-width: 1.5; transform: rotate(var(--r)); opacity: 0; animation: sc-spark .7s cubic-bezier(0.23, 1, 0.32, 1) infinite; animation-delay: var(--d); }
+.ind--egg .sc-spark { stroke-width: 1.5; transform: rotate(var(--r)); opacity: 0; animation: sc-spark .7s cubic-bezier(0.23, 1, 0.32, 1) infinite; animation-delay: var(--d); }
 @keyframes sc-spark { 0% { opacity: 1; transform: rotate(var(--r)) translateX(2px); } 100% { opacity: 0; transform: rotate(var(--r)) translateX(24px); } }
-.sc-welder .sc-arm--r { animation: sc-weld 3.2s ease-in-out infinite alternate; }
+.ind--egg .sc-welder .sc-arm--r { animation: sc-weld 3.2s ease-in-out infinite alternate; }
 @keyframes sc-weld { from { transform: rotate(calc(var(--a) - 6deg)); } to { transform: rotate(calc(var(--a) + 6deg)); } }
-.sc-rigger .sc-arm--l { animation: sc-wave 1.8s ease-in-out infinite alternate; }
+.ind--egg .sc-rigger .sc-arm--l { animation: sc-wave 1.8s ease-in-out infinite alternate; }
 @keyframes sc-wave { from { transform: rotate(calc(var(--a) - 14deg)); } to { transform: rotate(calc(var(--a) + 8deg)); } }
 
 /* the story strip lights the step in progress */
-.sc-step--1 { animation-name: sc-s1; } .sc-step--2 { animation-name: sc-s2; } .sc-step--3 { animation-name: sc-s3; } .sc-step--4 { animation-name: sc-s4; }
+.ind--egg .sc-step--1 { animation-name: sc-s1; } .ind--egg .sc-step--2 { animation-name: sc-s2; } .ind--egg .sc-step--3 { animation-name: sc-s3; } .ind--egg .sc-step--4 { animation-name: sc-s4; }
 @keyframes sc-s1 { 0%, 37% { fill: var(--accent); opacity: 1; } 37.5%, 100% { fill: var(--ik-2); opacity: .55; } }
 @keyframes sc-s2 { 0%, 39.5% { fill: var(--ik-2); opacity: .55; } 40%, 58% { fill: var(--accent); opacity: 1; } 58.5%, 100% { fill: var(--ik-2); opacity: .55; } }
 @keyframes sc-s3 { 0%, 58% { fill: var(--ik-2); opacity: .55; } 58.5%, 76% { fill: var(--accent); opacity: 1; } 76.5%, 100% { fill: var(--ik-2); opacity: .55; } }
@@ -1215,6 +1215,70 @@ ol, ul { list-style: none; }
   .sc-beam--placed { opacity: .85; }
 }
 @media (max-width: 1099px) { .in-scene { display: none; } } /* stacked: the board fills the screen */
+
+/* ── Variant E (industrial.html): its own scene, js/in-scene-e.js — kept apart from F's story ── */
+.ind:not(.ind--egg) .in-scene {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 46%; z-index: -1; pointer-events: none;
+  /* fade out upwards */
+  -webkit-mask-image: linear-gradient(to top, #000 60%, transparent);
+  mask-image: linear-gradient(to top, #000 60%, transparent);
+}
+.ind:not(.ind--egg) .in-scene svg { width: 100%; height: 100%; overflow: visible; }
+.ind:not(.ind--egg) .in-scene svg * { vector-effect: non-scaling-stroke; }
+.ind:not(.ind--egg) .sc-ink { fill: none; stroke: var(--ik); stroke-width: 1; opacity: .3; }
+.ind:not(.ind--egg) .sc-ink .sc-rib, .ind:not(.ind--egg) .sc-ink .sc-hatch { opacity: .5; }
+.ind:not(.ind--egg) .sc-ground { opacity: 1; }
+.ind:not(.ind--egg) .sc-crew { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; }
+.ind:not(.ind--egg) .sc-leg line { stroke-width: 5.5; }
+.ind:not(.ind--egg) .sc-arm line { stroke-width: 4.5; }
+.ind:not(.ind--egg) .sc-arm--l line { stroke: #b8391a; } /* the far arm sits back in shade */
+.ind:not(.ind--egg) .sc-body { fill: var(--accent); stroke: none; }
+.ind:not(.ind--egg) .sc-band { stroke: var(--pp); stroke-width: 1.5; opacity: .55; }
+.ind:not(.ind--egg) .sc-head { fill: var(--accent); stroke: none; }
+.ind:not(.ind--egg) .sc-helmet { fill: var(--ik); stroke: var(--ik); stroke-width: 1.5; }
+.ind:not(.ind--egg) .sc-beam { stroke: var(--ik); stroke-width: 1.5; opacity: .8; }
+.ind:not(.ind--egg) .sc-tool { stroke: var(--ik); stroke-width: 2.5; }
+.ind:not(.ind--egg) .sc-leg, .ind:not(.ind--egg) .sc-arm { transform: rotate(var(--a)); }
+
+/* walking: legs swing, the pair crosses the yard and fades at the ends */
+.ind:not(.ind--egg) .sc-walker .sc-leg--l { animation: e-sc-step .9s ease-in-out infinite alternate; }
+.ind:not(.ind--egg) .sc-walker .sc-leg--r { animation: e-sc-step .9s ease-in-out infinite alternate-reverse; }
+.ind:not(.ind--egg) .sc-walker--b .sc-leg--l { animation-delay: -.45s; } .ind:not(.ind--egg) .sc-walker--b .sc-leg--r { animation-delay: -.45s; }
+@keyframes e-sc-step { from { transform: rotate(calc(var(--a) - 20deg)); } to { transform: rotate(calc(var(--a) + 20deg)); } }
+.ind:not(.ind--egg) .sc-carry { animation: e-sc-cross 18s linear infinite; }
+@keyframes e-sc-cross {
+  0% { transform: translateX(-30px); opacity: 0; } 6% { opacity: 1; }
+  92% { opacity: 1; } 100% { transform: translateX(270px); opacity: 0; }
+}
+
+/* welding: the torch flickers, sparks spray and fade */
+.ind:not(.ind--egg) .e-sc-glow { fill: var(--accent); stroke: none; animation: e-sc-glow .18s steps(2) infinite; }
+@keyframes e-sc-glow { 50% { opacity: .35; } }
+.ind:not(.ind--egg) .e-sc-spark { stroke-width: 1.5; transform: rotate(var(--r)) translateX(0); opacity: 0; animation: e-sc-spark .7s cubic-bezier(0.23, 1, 0.32, 1) infinite; animation-delay: var(--d); }
+@keyframes e-sc-spark { 0% { opacity: 1; transform: rotate(var(--r)) translateX(2px); } 100% { opacity: 0; transform: rotate(var(--r)) translateX(24px); } }
+.ind:not(.ind--egg) .sc-welder .sc-arm--r { animation: e-sc-weld 3.2s ease-in-out infinite alternate; }
+@keyframes e-sc-weld { from { transform: rotate(calc(var(--a) - 6deg)); } to { transform: rotate(calc(var(--a) + 6deg)); } }
+
+/* the crane lowers its section, the rigger guides it in */
+.ind:not(.ind--egg) .e-sc-cable { transform-box: view-box; animation: e-sc-cable 7s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate; }
+.ind:not(.ind--egg) .e-sc-load { animation: e-sc-load 7s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate; }
+@keyframes e-sc-cable { from { transform: scaleY(1); } 70%, to { transform: scaleY(2.6); } }
+@keyframes e-sc-load { from { transform: translateY(0); } 70%, to { transform: translateY(22px); } }
+.ind:not(.ind--egg) .sc-rigger .sc-arm--l { animation: e-sc-wave 1.8s ease-in-out infinite alternate; }
+@keyframes e-sc-wave { from { transform: rotate(calc(var(--a) - 14deg)); } to { transform: rotate(calc(var(--a) + 8deg)); } }
+
+/* the bolter turns the wrench in short pulls */
+.ind:not(.ind--egg) .sc-bolter .sc-arm--r { animation: e-sc-bolt .55s ease-in-out infinite alternate; }
+@keyframes e-sc-bolt { from { transform: rotate(calc(var(--a) - 22deg)); } to { transform: rotate(calc(var(--a) + 10deg)); } }
+
+[data-mode="drawing"] .ind:not(.ind--egg) .sc-ink { opacity: .45; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ind:not(.ind--egg) .in-scene * { animation: none !important; }
+  .ind:not(.ind--egg) .e-sc-spark { opacity: 0; }
+}
+@media (max-width: 1099px) { .ind:not(.ind--egg) .in-scene { display: none; } } /* stacked: the board fills the screen and the buttons would sit on the crew */
+
 
 /* ── Variant F (egg.html): the yard only appears with the egg ── */
 .ind--egg .in-scene { opacity: 0; transition: opacity .6s cubic-bezier(0.23, 1, 0.32, 1); }
