@@ -4,33 +4,22 @@ description: Bravo Integrated Solutions staffs and coordinates industrial projec
 page: home
 body: home ind ind--story
 ---
-<div class="in-wrap">
-  <figure class="ph in-bg" aria-hidden="true"><img class="ph__bp" src="assets/img/port-bp.webp" alt="" loading="lazy"></figure>
-  <div class="in-scene" data-scene aria-hidden="true"></div>
-  <div class="in-cross" aria-hidden="true"><i class="in-cross__x"></i><i class="in-cross__y"></i></div>
+<div class="in-wrap" data-step="0">
+  <!-- the stage: fixed behind and around every section -->
+  <div class="in-stage">
+    <figure class="ph in-bg" aria-hidden="true"><img class="ph__bp" src="assets/img/port-bp.webp" alt="" loading="lazy"></figure>
+    <div class="in-scene" data-scene aria-hidden="true"></div>
+    <div class="in-cross" aria-hidden="true"><i class="in-cross__x"></i><i class="in-cross__y"></i></div>
+    <span class="in-slot-mini" aria-hidden="true"></span>
 
-  <!-- running header, as on every page of the brand book -->
-  <header class="in-head">
-    <a class="in-logo" href="index.html" aria-label="Bravo Integrated Solutions — home">
-      <svg viewBox="0 0 790.89 148" aria-hidden="true"><use href="#logo-h"/></svg>
-    </a>
-    <span class="in-head__rule" aria-hidden="true"></span>
-    <button class="egg in-mark" type="button" aria-pressed="false" aria-label="Drawing mode" title="B">B</button>
-  </header>
-
-  <main id="main" class="in-body">
-    <div class="in-left">
-      <h1 class="in-h1">
-        <span class="in-h1__l"><span>Industrial</span></span>
-        <span class="in-h1__l in-h1__l--o"><span>Outstaffing</span></span>
-        <span class="in-h1__l in-h1__l--r"><span>On site<i>.</i></span></span>
-      </h1>
-      <p class="vh" aria-live="polite"><span data-r="text"></span> <a data-r="href" href="services.html"><span data-r="title">Services</span></a></p>
-      <div class="in-paths">
-        <a class="in-path in-path--partner" href="contact.html"><span>For partners</span>Staff a project&nbsp;→</a>
-        <a class="in-path" href="careers.html"><span>For specialists</span>Find a job&nbsp;→</a>
-      </div>
-    </div>
+    <header class="in-head">
+      <a class="in-logo" href="#top" aria-label="Bravo Integrated Solutions — top">
+        <svg viewBox="0 0 790.89 148" aria-hidden="true"><use href="#logo-h"/></svg>
+      </a>
+      <span class="in-head__rule" aria-hidden="true"></span>
+      <p class="in-page" aria-hidden="true"><span data-page>000</span> <b data-page-name>Bravo</b></p>
+      <button class="egg in-mark" type="button" aria-pressed="false" aria-label="Drawing mode" title="B">B</button>
+    </header>
 
     <div class="in-board" data-in-board>
       <svg viewBox="0 0 1000 1000" role="group" aria-label="Manoeuvring board — sections">
@@ -46,12 +35,117 @@ body: home ind ind--story
         <g class="in-hub" data-hub aria-hidden="true" transform="translate(462 464) scale(.2111)"></g>
       </svg>
       <p class="in-hdg" aria-hidden="true">HDG <b data-hdg>000.0</b>°</p>
-      <span class="in-coord in-coord--t" aria-hidden="true">0</span>
-      <span class="in-coord in-coord--r" aria-hidden="true">90</span>
     </div>
+  </div>
+
+  <main id="main" class="in-flow">
+    <section class="in-sec in-sec--hero" id="top" data-step="0" aria-label="Bravo Integrated Solutions">
+      <div class="in-col">
+        <h1 class="in-h1">
+          <span class="in-h1__l"><span>Industrial</span></span>
+          <span class="in-h1__l in-h1__l--o"><span>Outstaffing</span></span>
+          <span class="in-h1__l in-h1__l--r"><span>On site<i>.</i></span></span>
+        </h1>
+        <div class="in-paths">
+          <a class="in-path in-path--partner" href="#contact"><span>For partners</span>Staff a project&nbsp;→</a>
+          <a class="in-path" href="#careers"><span>For specialists</span>Find a job&nbsp;→</a>
+        </div>
+      </div>
+      <span class="in-slot-hero" aria-hidden="true"></span>
+      <p class="vh" aria-live="polite"><span data-r="text"></span> <a data-r="href" href="#services"><span data-r="title">Services</span></a></p>
+    </section>
+
+    <section class="in-sec" id="services" data-step="1" data-brg="0" aria-labelledby="s-services">
+      <div class="in-col">
+        <p class="in-kicker">000 <span>/</span> Services</p>
+        <h2 class="in-h2" id="s-services">Teams that<br>arrive <em>ready.</em></h2>
+        <ol class="in-list">
+          <li><b>Field teams</b><span>Welders, fitters, electricians, scaffolders — mobilised as a crew.</span></li>
+          <li><b>Engineering &amp; supervision</b><span>Engineers, foremen, QA/QC and HSE who lead and check the work.</span></li>
+          <li><b>Coordination</b><span>One coordinator on site, rotations and replacements handled.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="in-sec" id="projects" data-step="2" data-brg="90" aria-labelledby="s-projects">
+      <div class="in-col">
+        <p class="in-kicker">090 <span>/</span> Projects</p>
+        <h2 class="in-h2" id="s-projects">Where we<br><em>work.</em></h2>
+        <ul class="in-tags">
+          <li>Shipbuilding</li><li>Offshore</li><li>Port infrastructure</li><li>Manufacturing</li>
+        </ul>
+        <ul class="in-refs" data-projects></ul>
+        <p class="in-note"><b>BravoDoc</b> — our AI validator for engineering documents, in prototype. <a href="#contact" data-topic="bravodoc">Pilot it with us →</a></p>
+      </div>
+    </section>
+
+    <section class="in-sec" id="careers" data-step="3" data-brg="180" aria-labelledby="s-careers">
+      <div class="in-col">
+        <p class="in-kicker">180 <span>/</span> Careers</p>
+        <h2 class="in-h2" id="s-careers">Join the<br><em>crew.</em></h2>
+        <ul class="in-jobs" data-jobs></ul>
+        <p class="in-note" data-jobs-empty hidden>No positions are listed right now — new projects open often.</p>
+        <p data-open-wrap><button class="in-btn" type="button" data-open="apply">Apply now&nbsp;→</button></p>
+      </div>
+    </section>
+
+    <section class="in-sec" id="contact" data-step="4" data-brg="270" aria-labelledby="s-contact">
+      <div class="in-col">
+        <p class="in-kicker">270 <span>/</span> Contact</p>
+        <h2 class="in-h2" id="s-contact">Tell us about<br>the <em>project.</em></h2>
+        <dl class="in-contact" data-config-group>
+          <div data-config-group><dt>Email</dt><dd><a data-config="email" href=""></a></dd></div>
+          <div data-config-group><dt>Phone</dt><dd><a data-config="phone" href=""></a></dd></div>
+          <div data-config-group><dt>Office</dt><dd data-config="address"></dd></div>
+          <div data-config-group><dt>LinkedIn</dt><dd><a data-config="linkedin" href="" rel="noopener">Company page</a></dd></div>
+        </dl>
+        <p data-open-wrap><button class="in-btn" type="button" data-open="inquiry">Send an inquiry&nbsp;→</button></p>
+        <p class="in-note" data-contact-empty hidden>Contact details are on their way — this page is being set up.</p>
+      </div>
+    </section>
+
+    <footer class="in-sec in-sec--end" id="end" data-step="5" aria-label="Footer">
+      <div class="in-col">
+        <svg class="in-end__logo" viewBox="0 0 790.89 148" aria-hidden="true"><use href="#logo-h"/></svg>
+        <p class="in-end__line">Skilled teams for industrial projects.</p>
+        <p class="in-end__meta">© <span data-year>2026</span> Bravo Integrated Solutions <span>·</span> <a href="#top">Back to top ↑</a></p>
+      </div>
+    </footer>
   </main>
 
-  <p class="in-page" aria-hidden="true"><span data-page>001</span> / 004</p>
+  <dialog class="in-dialog" id="apply" aria-labelledby="d-apply">
+    <form class="form" data-form="application" novalidate>
+      <div class="in-dialog__head"><h2 id="d-apply">Apply</h2><button class="in-dialog__x" type="button" data-close aria-label="Close">×</button></div>
+      <input type="hidden" name="form" value="Job application">
+      <p class="hp" aria-hidden="true"><label>Leave empty <input name="_gotcha" tabindex="-1" autocomplete="off"></label></p>
+      <div class="field field--full"><label for="a-position">Position *</label><select id="a-position" name="position" required data-positions><option value="Open application">Open application</option></select></div>
+      <div class="field"><label for="a-name">Full name *</label><input id="a-name" name="name" autocomplete="name" required></div>
+      <div class="field"><label for="a-trade">Trade / specialty *</label><input id="a-trade" name="trade" required placeholder="e.g. TIG welder"></div>
+      <div class="field"><label for="a-email">Email *</label><input id="a-email" name="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="a-phone">Phone *</label><input id="a-phone" name="phone" type="tel" autocomplete="tel" required></div>
+      <div class="field"><label for="a-exp">Experience *</label><select id="a-exp" name="experience" required><option value="">Select</option><option>Less than 2 years</option><option>2–5 years</option><option>5–10 years</option><option>More than 10 years</option></select></div>
+      <div class="field"><label for="a-certs">Certificates</label><input id="a-certs" name="certificates" placeholder="e.g. ISO 9606-1"></div>
+      <div class="field field--full" data-needs-endpoint><label for="a-cv">CV and certificates</label><input id="a-cv" name="attachment" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"><small>PDF, Word or photo, up to 10 MB.</small></div>
+      <div class="field field--full check"><input id="a-ok" name="consent" type="checkbox" value="yes" required><label for="a-ok">I agree that Bravo Integrated Solutions stores and processes my data to assess my application. *</label></div>
+      <div class="form__foot"><button class="btn" type="submit">Send application <span aria-hidden="true">→</span></button><p class="form__status" role="status" data-status></p></div>
+    </form>
+  </dialog>
+
+  <dialog class="in-dialog" id="inquiry" aria-labelledby="d-inquiry">
+    <form class="form" data-form="inquiry" novalidate>
+      <div class="in-dialog__head"><h2 id="d-inquiry">Project inquiry</h2><button class="in-dialog__x" type="button" data-close aria-label="Close">×</button></div>
+      <input type="hidden" name="form" value="Inquiry">
+      <p class="hp" aria-hidden="true"><label>Leave empty <input name="_gotcha" tabindex="-1" autocomplete="off"></label></p>
+      <div class="field field--full"><label for="c-topic">Topic *</label><select id="c-topic" name="topic" required><option value="staffing">Staffing for a project</option><option value="partnership">Partnership</option><option value="bravodoc">BravoDoc pilot</option><option value="other">Other</option></select></div>
+      <div class="field"><label for="c-name">Name *</label><input id="c-name" name="name" autocomplete="name" required></div>
+      <div class="field"><label for="c-company">Company *</label><input id="c-company" name="company" autocomplete="organization" required></div>
+      <div class="field"><label for="c-email">Email *</label><input id="c-email" name="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="c-phone">Phone</label><input id="c-phone" name="phone" type="tel" autocomplete="tel"></div>
+      <div class="field field--full"><label for="c-msg">Project, trades, headcount, dates *</label><textarea id="c-msg" name="message" rows="4" required></textarea></div>
+      <div class="field field--full check"><input id="c-ok" name="consent" type="checkbox" value="yes" required><label for="c-ok">I agree that Bravo Integrated Solutions processes these details to answer my inquiry. *</label></div>
+      <div class="form__foot"><button class="btn" type="submit">Send inquiry <span aria-hidden="true">→</span></button><p class="form__status" role="status" data-status></p></div>
+    </form>
+  </dialog>
 </div>
 <script src="js/home.js" defer></script>
 <script src="js/in-scene.js" defer></script>

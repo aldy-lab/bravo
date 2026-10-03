@@ -21,10 +21,10 @@
   const norm = (d) => ((d % 360) + 360) % 360;
 
   const SECTIONS = [
-    { brg: 0,   rng: 250, href: "services.html", title: "Services", text: "Field teams, engineering and supervision for industrial projects." },
-    { brg: 90,  rng: 250, href: "projects.html", title: "Projects", text: "Projects we staff, and BravoDoc — our validator for engineering documents." },
-    { brg: 180, rng: 250, href: "careers.html",  title: "Careers",  text: "Open positions for welders, fitters, electricians and engineers." },
-    { brg: 270, rng: 250, href: "contact.html",  title: "Contact",  text: "Tell us about your project and the team you need." },
+    { brg: 0,   rng: 250, href: "#services", title: "Services", text: "Field teams, engineering and supervision for industrial projects." },
+    { brg: 90,  rng: 250, href: "#projects", title: "Projects", text: "Projects we staff, and BravoDoc — our validator for engineering documents." },
+    { brg: 180, rng: 250, href: "#careers",   title: "Careers",  text: "Open positions for welders, fitters, electricians and engineers." },
+    { brg: 270, rng: 250, href: "#contact",   title: "Contact",  text: "Tell us about your project and the team you need." },
   ];
 
   /* the card: the brand book's graphic element — a crown of fine radial
@@ -141,8 +141,6 @@
       nodes.forEach((n, i) => [n.li, n.g].forEach((e) => e.classList.toggle("is-active", i === idx)));
       const n = nodes[idx];
       read.title.textContent = n.title; read.text.textContent = n.text; read.href.href = n.href;
-      page.textContent = String(idx + 1).padStart(3, "0");
-      if (booted && wrap.classList.contains("is-ready")) roll(page);
     }
   }
 
@@ -163,7 +161,12 @@
     if (reduced) { heading = target; layout(); if (onArrive) { const f = onArrive; onArrive = null; f(); } return; }
     run();
   };
-  const go = (n) => steer(n.brg, () => setTimeout(() => { location.href = n.href; }, reduced ? 0 : 160));
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    if (history.replaceState) history.replaceState(null, "", "#" + id);
+  };
+  const go = (n) => steer(n.brg, () => scrollTo(n.href.slice(1)));
 
   const local = (e) => {
     const r = board.getBoundingClientRect();
@@ -200,6 +203,8 @@
     const a = samples[0], b = samples[samples.length - 1];
     const v = b.t > a.t ? (b.h - a.h) / ((b.t - a.t) / 1000) : 0;
     target = nearest(heading + Math.max(-240, Math.min(240, v * 0.22)));
+    // off the hero the board is the navigation: where it settles, the page follows
+    if (step > 0) onArrive = () => { const n = nodes.find((x) => x.brg === norm(target)); if (n) scrollTo(n.href.slice(1)); };
     run();
   };
   addEventListener("pointerup", release);
@@ -220,19 +225,80 @@
   });
   addEventListener("keydown", (e) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    if (e.target.closest("input, textarea, select, dialog")) return;
     e.preventDefault();
-    steer(norm(nearest(target) + (e.key === "ArrowRight" ? STEP : -STEP)));
+    const to = norm(nearest(target) + (e.key === "ArrowRight" ? STEP : -STEP));
+    if (step > 0) go(nodes.find((x) => x.brg === to)); else steer(to);
   });
 
-  // the page-wide crosshair passes through the centre of the board
-  const align = () => {
-    const w = wrap.getBoundingClientRect(), b = board.getBoundingClientRect();
-    wrap.style.setProperty("--in-cx", (b.left + b.width / 2 - w.left) + "px");
-    wrap.style.setProperty("--in-cy", (b.top + b.height / 2 - w.top) + "px");
-    wrap.style.setProperty("--b-r", b.width / 2 + "px");
+  /* ── one page, one screen: the board travels with the scroll ─────────
+     On the hero it fills its slot; scrolling on, it shrinks into the
+     corner slot and stays there as the navigation. Position is a
+     transform of the fixed board, interpolated by scroll. */
+  const hero = $(".in-sec--hero"), slotHero = $(".in-slot-hero"), slotMini = $(".in-slot-mini");
+  let baseW = 0, placing = 0;
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const place = () => {
+    placing = 0;
+    const a = slotHero.getBoundingClientRect(), b = slotMini.getBoundingClientRect();
+    if (!baseW || Math.abs(baseW - a.width) > 1) { baseW = a.width; board.style.width = baseW + "px"; }
+    const p = ease(Math.max(0, Math.min(1, scrollY / (hero.offsetHeight * 0.8))));
+    const x = a.left + (b.left - a.left) * p, y = a.top + (b.top - a.top) * p, w = a.width + (b.width - a.width) * p;
+    board.style.transform = `translate(${x}px, ${y}px) scale(${w / baseW})`;
+    wrap.classList.toggle("is-docked", p > 0.98);
+    // the page-wide crosshair passes through the centre of the board
+    wrap.style.setProperty("--in-cx", x + w / 2 + "px");
+    wrap.style.setProperty("--in-cy", y + w / 2 + "px");
   };
-  new ResizeObserver(align).observe(wrap);
-  new ResizeObserver(() => { layout(); align(); }).observe(board);
+  const schedule = () => { if (!placing) placing = requestAnimationFrame(place); };
+  addEventListener("scroll", schedule, { passive: true });
+  addEventListener("resize", schedule);
+  new ResizeObserver(schedule).observe(document.documentElement);
+  place();
+
+  /* ── the section in view sets the step: board heading, scene, counter ── */
+  const NAMES = ["Bravo", "Services", "Projects", "Careers", "Contact", "Bravo"];
+  const pageName = $("[data-page-name]");
+  let step = 0;
+  const setStep = (n) => {
+    if (n === step) return;
+    step = n;
+    wrap.dataset.step = n;
+    const sec = $(`.in-sec[data-step="${n}"]`);
+    page.textContent = sec && sec.dataset.brg ? brg3(+sec.dataset.brg) : "—";
+    pageName.textContent = NAMES[n];
+    if (booted) { roll(page); roll(pageName); }
+    if (sec && sec.dataset.brg && !dragging) steer(+sec.dataset.brg);
+  };
+  page.textContent = "—";
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => { if (en.isIntersecting) setStep(+en.target.dataset.step); });
+  }, { rootMargin: "-45% 0px -45% 0px" });
+  document.querySelectorAll(".in-sec[data-step]").forEach((s2) => io.observe(s2));
+
+  /* one screen per wheel notch: with mandatory snapping a short wheel
+     scroll would otherwise spring back to where it started */
+  const secs = [...document.querySelectorAll(".in-sec[data-step]")];
+  let wheelLock = 0, wheelAcc = 0;
+  addEventListener("wheel", (e) => {
+    if (e.ctrlKey || document.querySelector("dialog[open]")) return;
+    const cur = secs[step];
+    if (cur && cur.offsetHeight > innerHeight + 4) {
+      // a tall section scrolls normally until its edge, then pages on
+      const r = cur.getBoundingClientRect();
+      if (e.deltaY > 0 ? r.bottom > innerHeight + 2 : r.top < -2) return;
+    }
+    e.preventDefault();
+    if (performance.now() < wheelLock) return;
+    wheelAcc += e.deltaY;
+    if (Math.abs(wheelAcc) < 30) return;
+    const next = secs[Math.max(0, Math.min(secs.length - 1, step + Math.sign(wheelAcc)))];
+    wheelAcc = 0;
+    if (!next || next === cur) return;
+    wheelLock = performance.now() + (reduced ? 300 : 850);
+    next.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  }, { passive: false });
+
   layout();
   booted = true;
 

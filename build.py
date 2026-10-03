@@ -25,7 +25,7 @@ NAV = [
     ("careers.html", "careers", "Careers", "180"),
     ("contact.html", "contact", "Contact", "270"),
 ]
-PAGES = ["index.html"] + [n[0] for n in NAV]
+PAGES = ["index.html"]  # one page; the old pages are redirects below
 VARIANTS = []  # alternative heroes: built, but kept out of the sitemap and search
 
 
@@ -71,11 +71,15 @@ def build():
     print("wrote sitemap.xml, robots.txt")
 
     # retired home variants: keep their old links working
-    for old in ["industrial.html", "egg.html", "plot.html", "minimal.html", "te.html"]:
+    # retired pages: keep their old links working, each to its section
+    retired = {"industrial.html": "", "egg.html": "", "plot.html": "", "minimal.html": "", "te.html": "",
+               "services.html": "#services", "projects.html": "#projects", "careers.html": "#careers", "contact.html": "#contact"}
+    for old, anchor in retired.items():
         (ROOT / old).write_text(
             '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
-            f'<link rel="canonical" href="{BASE}"><meta http-equiv="refresh" content="0; url=./">'
-            '<title>Bravo Integrated Solutions</title><a href="./">Bravo Integrated Solutions</a>\n'
+            f'<link rel="canonical" href="{BASE}"><meta http-equiv="refresh" content="0; url=./{anchor}">'
+            f'<script>location.replace("./" + location.search + "{anchor}")</script>'
+            f'<title>Bravo Integrated Solutions</title><a href="./{anchor}">Bravo Integrated Solutions</a>\n'
         )
 
 

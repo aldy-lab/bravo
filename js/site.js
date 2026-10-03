@@ -79,80 +79,65 @@ const CONFIG = {
   const visible = (list) => list.filter((x) => preview || !x.sample);
   const stamp = (x) => (x.sample ? '<span class="stamp">Sample</span>' : "");
 
+  const select = $("[data-positions]");
   const jobsEl = $("[data-jobs]");
   if (jobsEl) {
     const jobs = visible(data.vacancies);
-    const select = $("[data-positions]");
     jobs.forEach((j, i) => {
       jobsEl.insertAdjacentHTML("beforeend", `
-        <li class="job"><details>
-          <summary>
-            <span class="job__n">${String(i + 1).padStart(2, "0")}</span>
-            <span class="job__title">${esc(j.title)} ${stamp(j)}</span>
-            <span class="job__meta">${esc(j.type)} · ${esc(j.location)}</span>
-            <span class="job__plus" aria-hidden="true"></span>
-          </summary>
-          <div class="job__body">
-            <dl class="job__facts">
-              <div><dt>Start</dt><dd>${esc(j.start)}</dd></div>
-              <div><dt>Duration</dt><dd>${esc(j.duration)}</dd></div>
-              <div><dt>Location</dt><dd>${esc(j.location)}</dd></div>
-            </dl>
-            <div><p class="job__req-h">Requirements</p><ul class="job__req">${j.requirements.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></div>
-            <p><a class="btn btn--line" href="#apply" data-apply="${esc(j.title)}">Apply for this position <span aria-hidden="true">→</span></a></p>
-          </div>
-        </details></li>`);
+        <li><button type="button" data-apply="${esc(j.title)}">
+          <span class="in-jobs__n">${String(i + 1).padStart(2, "0")}</span>
+          <span class="in-jobs__t">${esc(j.title)} ${stamp(j)}</span>
+          <span class="in-jobs__m">${esc(j.type)} · ${esc(j.duration)}</span>
+        </button></li>`);
       if (select) select.insertAdjacentHTML("beforeend", `<option>${esc(j.title)}</option>`);
     });
-    const count = $("[data-jobs-count]");
-    if (count) count.textContent = jobs.length ? `${jobs.length} open` : "";
     if (!jobs.length) $("[data-jobs-empty]").hidden = false;
-    jobsEl.addEventListener("click", (e) => {
-      const a = e.target.closest("[data-apply]");
-      if (a && select) select.value = a.dataset.apply;
-    });
   }
 
   const projEl = $("[data-projects]");
   if (projEl) {
     const projects = visible(data.projects);
-    if (!projects.length) $("[data-projects-wrap]").remove();
-    projects.forEach((p, i) => {
-      projEl.insertAdjacentHTML("beforeend", `
-        <li class="project">
-          <figure class="ph ph--frame">
-            <img class="ph__img" src="assets/img/${p.photo}-960.webp" alt="" loading="lazy" width="960" height="640">
-            <img class="ph__bp" src="assets/img/${p.photo}-bp.webp" alt="" loading="lazy">
-            <figcaption><span class="cap-photo">Ref.</span><span class="cap-dwg">Dwg.</span> ${String(i + 1).padStart(2, "0")} — ${esc(p.sector)}</figcaption>
-          </figure>
-          <h3>${esc(p.title)} ${stamp(p)}</h3>
-          <p>${esc(p.scope)}</p>
-          <dl class="project__facts">
-            <div><dt>Location</dt><dd>${esc(p.location)}</dd></div>
-            <div><dt>Year</dt><dd>${esc(p.year)}</dd></div>
-            <div><dt>Team</dt><dd>${esc(p.team)}</dd></div>
-          </dl>
-        </li>`);
+    if (!projects.length) projEl.remove();
+    projects.forEach((p) => {
+      projEl.insertAdjacentHTML("beforeend", `<li><b>${esc(p.title)} ${stamp(p)}</b><span>${esc(p.sector)} · ${esc(p.year)} · ${esc(p.team)}</span></li>`);
     });
-    const count = $("[data-projects-count]");
-    if (count) count.textContent = projects.length ? `${projects.length} projects` : "";
   }
 
+  /* ── dialogs: the forms open over the page ───────────────── */
+  const openDialog = (id) => {
+    const d = document.getElementById(id);
+    if (!d || !d.showModal) return false;
+    d.showModal();
+    return true;
+  };
+  document.addEventListener("click", (e) => {
+    const open = e.target.closest("[data-open]");
+    if (open) { openDialog(open.dataset.open); return; }
+    const job = e.target.closest("[data-apply]");
+    if (job) { if (select) select.value = job.dataset.apply; openDialog("apply"); return; }
+    const close = e.target.closest("[data-close]");
+    if (close) { close.closest("dialog").close(); return; }
+    if (e.target.tagName === "DIALOG") e.target.close(); // a click on the backdrop
+    const t = e.target.closest("[data-topic]");
+    if (t && $("#c-topic")) $("#c-topic").value = t.dataset.topic;
+  });
+
   /* ── forms ───────────────────────────────────────────────── */
-  const topic = new URLSearchParams(location.search).get("topic");
-  if (topic && $("#c-topic")) $("#c-topic").value = topic;
-  const trade = new URLSearchParams(location.search).get("trade");
-  if (trade && $("#a-trade")) $("#a-trade").value = trade;
+  const qs = new URLSearchParams(location.search);
+  if (qs.get("topic") && $("#c-topic")) $("#c-topic").value = qs.get("topic");
+  if (qs.get("trade") && $("#a-trade")) $("#a-trade").value = qs.get("trade");
 
   $$("[data-form]").forEach((form) => {
     const kind = form.dataset.form;
     const to = ((kind === "application" && CONFIG.careersEmail) || CONFIG.email || "").trim();
     const mode = CONFIG.formEndpoint ? "post" : to ? "mail" : preview ? "demo" : "off";
     if (mode === "off") {
-      // nowhere to send it: remove the form and anything that points at it
-      const sec = form.closest("section");
-      if (sec && sec.id === "apply") { sec.remove(); $$('a[href="#apply"]').forEach((a) => a.closest("p")?.remove()); }
+      // nowhere to send it: remove the form, its dialog and anything that opens it
+      const d = form.closest("dialog");
+      if (d) { $$(`[data-open="${d.id}"]`).forEach((b) => (b.closest("[data-open-wrap]") || b).remove()); d.remove(); }
       else form.remove();
+      $$("[data-apply]").forEach((b) => { if (kind === "application") b.removeAttribute("data-apply"); });
       return;
     }
     if (mode !== "post") $$("[data-needs-endpoint]", form).forEach((f) => f.remove());
@@ -208,4 +193,7 @@ const CONFIG = {
   const empty = $("[data-jobs-empty]");
   if (empty && !$("#apply")) empty.textContent = "No positions are listed right now. Please check back soon.";
 
+
+  // the contact section must not end up empty while the client's details are pending
+  if ($("[data-contact-empty]") && !$(".in-contact") && !$('[data-open="inquiry"]')) $("[data-contact-empty]").hidden = false;
 })();
