@@ -1186,3 +1186,47 @@ ol, ul { list-style: none; }
   [data-mode="drawing"] .ind--egg .in-board { --b: min(calc(100vw - 2 * var(--gutter)), 540px, calc(100svh - 104px - var(--h1) * 2.7 - 204px)); }
 }
 @media (prefers-reduced-motion: reduce) { .ind--egg :is(.sc-man, .sc-sparks, .sc-carry > .sc-beam) { translate: none; transition: opacity .3s; } }
+
+/* ── Variant F: the crew answers back (drawing mode only) ── */
+.sc-call { visibility: hidden; opacity: 0; transition: opacity .4s cubic-bezier(0.23, 1, 0.32, 1), visibility 0s .4s; }
+[data-mode="drawing"] .ind--egg .sc-call { visibility: visible; opacity: 1; transition-delay: 1.4s; transition-property: opacity; }
+.sc-call__lead { stroke: var(--ik); stroke-width: 1; opacity: .6; }
+.sc-call__ball { fill: var(--pp); stroke: var(--ik); stroke-width: 1.2; transition: fill .25s, stroke .25s; }
+.sc-call__no { fill: var(--ik); stroke: none; font: 600 11px var(--f-text); text-anchor: middle; }
+.sc-call__tag { opacity: 0; translate: 0 4px; transition: opacity .25s cubic-bezier(0.23, 1, 0.32, 1), translate .25s cubic-bezier(0.23, 1, 0.32, 1); pointer-events: none; }
+.sc-call__rule { stroke: var(--ik); stroke-width: 1; opacity: .5; }
+.sc-call__t { fill: var(--ik); stroke: none; font: 700 13px var(--f-display); font-stretch: 115%; letter-spacing: .12em; }
+.sc-call__a text { fill: var(--accent); stroke: none; font: 500 12px var(--f-text); }
+.sc-call__a:hover text { text-decoration: underline; }
+.sc-hit { fill: transparent; stroke: none; }
+[data-mode="drawing"] .ind--egg .in-scene { pointer-events: none; }
+[data-mode="drawing"] .ind--egg :is(.sc-man--live, .sc-hit--crane) { pointer-events: auto; cursor: pointer; }
+[data-mode="drawing"] .ind--egg .sc-man--live.is-open .sc-call__tag { pointer-events: auto; }
+.sc-man--live.is-open .sc-call__ball, .sc-man--live:focus-within .sc-call__ball { fill: var(--accent); stroke: var(--accent); }
+.sc-man--live.is-open .sc-call__no { fill: #fff; }
+.sc-man--live.is-open .sc-call__tag, .sc-man--live:focus-within .sc-call__tag { opacity: 1; translate: 0 0; }
+@media (hover: hover) and (pointer: fine) {
+  .sc-man--live:hover .sc-call__ball { stroke: var(--accent); }
+  .sc-man--live:hover .sc-call__tag { opacity: 1; translate: 0 0; pointer-events: auto; }
+}
+/* the main content must not swallow taps meant for the yard */
+.ind--egg .in-body { pointer-events: none; }
+.ind--egg .in-left > *, .ind--egg .in-board { pointer-events: auto; }
+
+/* reactions */
+.sc-burst .sc-arm--r { animation-duration: .4s; }
+.ind--egg .sc-sparks { transition: scale .3s; }
+.sc-hurry .sc-arm { animation-duration: .25s !important; }
+.sc-halt { animation-play-state: paused; }
+.sc-carry:has(.sc-halt) { animation-play-state: paused; }
+.sc-carry:has(.sc-halt) .sc-leg { animation-play-state: paused; }
+.in-scene:has(.sc-welder.is-open) .sc-spark { animation-duration: .35s; stroke-width: 2.5; }
+.in-scene:has(.sc-welder.is-open) .sc-sparks { scale: 1.8; }
+/* crane on demand */
+.in-scene svg.is-lowered .sc-cable { animation: none; transform: scaleY(2.6); transition: transform 1.6s cubic-bezier(0.77, 0, 0.175, 1); }
+.in-scene svg.is-lowered .sc-load { animation: none; transform: translateY(22px); transition: transform 1.6s cubic-bezier(0.77, 0, 0.175, 1); }
+@media (max-width: 1099px) { .sc-call__tag { display: none; } .sc-call { display: none; } }
+/* drawing furniture on the board never takes a click meant for a label */
+.in-dwg, .in-board [data-card], .in-board [data-targets], .in-hub, .in-lubber { pointer-events: none; }
+.in-node__hit { fill: none; stroke: transparent; stroke-width: 70; vector-effect: none !important; pointer-events: stroke; }
+.sc-man--live { outline: none; }

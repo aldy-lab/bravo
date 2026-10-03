@@ -88,6 +88,10 @@
   const nodes = SECTIONS.map((s, i) => {
     // the label is written along a ring on the card, so it turns with the board (the ring starts at 045°, between sections, so no label is cut at its seam)
     const li = el("a", { href: s.href, "data-i": i, class: "in-node", style: `--i:${i}` }, list);
+    // a wide invisible arc under the word: the tap target, whatever the angle
+    const arcAt = (d) => [C + 335 * Math.sin(d * Math.PI / 180), C - 335 * Math.cos(d * Math.PI / 180)];
+    const [ax0, ay0] = arcAt(s.brg - 24), [ax1, ay1] = arcAt(s.brg + 24);
+    el("path", { class: "in-node__hit", d: `M${ax0} ${ay0} A335 335 0 0 1 ${ax1} ${ay1}` }, li);
     const txt = el("text", { class: "in-node__t", dy: "-14" }, li);
     el("textPath", { href: "#in-label-ring", startOffset: `${((s.brg + 315) % 360) / 3.6}%`, "text-anchor": "middle" }, txt).textContent = s.title;
     const g = el("g", { class: "in-target", style: `--i:${i}` }, tg);

@@ -100,7 +100,7 @@
   el("circle", { cx: 0, cy: 0, r: 4, class: "sc-glow" }, sparks);
 
   // rigger at the crane leg, guiding the section down
-  person(c2 - 70, G, { armL: 150, armR: 10, cls: "sc-rigger" });
+  const rig = person(c2 - 70, G, { armL: 150, armR: 10, cls: "sc-rigger" });
 
   // fitter torquing the splice bolts on the column
   const f = person(kx - 20, G, { armL: 14, armR: -96, cls: "sc-bolter" });
@@ -110,5 +110,61 @@
   const carry = el("g", { class: "sc-carry" }, crew);
   const beamY = G - 75; // held overhead, just above the helmets
   el("path", { d: `M888 ${beamY}h150 M888 ${beamY - 6}h150 M888 ${beamY + 3}h150`, class: "sc-beam" }, carry);
-  [900, 1024].forEach((x, i) => person(x, G, { armL: 172, armR: 188, cls: "sc-walker" + (i ? " sc-walker--b" : "") }, carry));
+  const pair = [900, 1024].map((x, i) => person(x, G, { armL: 172, armR: 188, cls: "sc-walker" + (i ? " sc-walker--b" : "") }, carry));
+
+  /* ── interaction (egg.html only) ────────────────────────
+     In drawing mode each worker carries an item balloon, as on an
+     assembly drawing. Hover, focus or tap opens it: the trade and a link
+     to apply. A tap also gets a reaction out of the worker. */
+  if (!document.body.classList.contains("ind--egg")) return;
+  host.removeAttribute("aria-hidden");
+  ink.setAttribute("aria-hidden", "true");
+  svg.setAttribute("role", "group");
+  svg.setAttribute("aria-label", "The crew at work");
+
+  const CREW = [
+    { man: w, trade: "Welder", react: "sc-burst", lead: [-34, -40] },
+    { man: rig, trade: "Rigger", react: "sc-hurry", lead: [40, -40] },
+    { man: f, trade: "Fitter", react: "sc-hurry", lead: [54, -56] },
+    { man: pair[1], trade: "Fitter", react: "sc-halt", lead: [34, -30], label: "Fitters" },
+  ];
+  const calls = CREW.map((c, i) => {
+    const call = el("g", { class: "sc-call" }, c.man.g);
+    const [lx, ly] = c.lead, hx = 0, hy = -70, bx2 = hx + lx, by2 = hy + ly;
+    const right = lx > 0;
+    el("path", { d: `M${hx + (right ? 4 : -4)} ${hy}L${bx2} ${by2}`, class: "sc-call__lead" }, call);
+    el("circle", { cx: bx2, cy: by2, r: 11, class: "sc-call__ball" }, call);
+    el("text", { x: bx2, y: by2 + 4, class: "sc-call__no" }, call).textContent = i + 1;
+    const tag = el("g", { class: "sc-call__tag" }, call);
+    const tx0 = right ? bx2 + 18 : bx2 - 18, anchor = right ? "start" : "end";
+    el("line", { x1: bx2 + (right ? 11 : -11), y1: by2, x2: tx0 + (right ? 104 : -104), y2: by2, class: "sc-call__rule" }, tag);
+    el("text", { x: tx0, y: by2 - 6, "text-anchor": anchor, class: "sc-call__t" }, tag).textContent = (c.label || c.trade).toUpperCase();
+    const link = el("a", { href: `careers.html?trade=${encodeURIComponent(c.trade)}#apply`, class: "sc-call__a" }, tag);
+    el("text", { x: tx0, y: by2 + 16, "text-anchor": anchor }, link).textContent = `Join as ${c.trade.toLowerCase()} →`;
+    // a generous invisible target over the worker himself
+    el("rect", { x: -16, y: -74, width: 32, height: 76, class: "sc-hit" }, c.man.g);
+    c.man.g.classList.add("sc-man--live");
+    return { ...c, call };
+  });
+
+  const close = () => calls.forEach((c) => { c.man.g.classList.remove("is-open", c.react); });
+  calls.forEach((c) => {
+    c.man.g.addEventListener("click", (e) => {
+      if (e.target.closest("a")) return; // the link navigates as usual
+      const open = c.man.g.classList.contains("is-open");
+      close();
+      if (open) return;
+      c.man.g.classList.add("is-open", c.react);
+      if (c.man.g.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        c.man.g.animate([{ translate: "0 0" }, { translate: "0 -10px" }, { translate: "0 0" }], { duration: 420, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+      }
+    });
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".sc-man--live")) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+
+  // the crane: a tap sends the section down or brings it back up
+  const crane = el("rect", { x: c1 - 10, y: top - 8, width: c2 - c1 + 20, height: 36, class: "sc-hit sc-hit--crane" });
+  svg.insertBefore(crane, crew); // under the crew, so a balloon over the gantry stays clickable
+  crane.addEventListener("click", () => svg.classList.toggle("is-lowered"));
 })();

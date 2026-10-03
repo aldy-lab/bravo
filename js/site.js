@@ -141,6 +141,8 @@ const CONFIG = {
   /* ── forms ───────────────────────────────────────────────── */
   const topic = new URLSearchParams(location.search).get("topic");
   if (topic && $("#c-topic")) $("#c-topic").value = topic;
+  const trade = new URLSearchParams(location.search).get("trade");
+  if (trade && $("#a-trade")) $("#a-trade").value = trade;
 
   $$("[data-form]").forEach((form) => {
     const kind = form.dataset.form;
