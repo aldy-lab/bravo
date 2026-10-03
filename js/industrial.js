@@ -21,9 +21,9 @@
   const norm = (d) => ((d % 360) + 360) % 360;
 
   const SECTIONS = [
-    { brg: 0,   rng: 270, href: "services.html", title: "Services", text: "Field teams, engineering and supervision for industrial projects." },
+    { brg: 0,   rng: 250, href: "services.html", title: "Services", text: "Field teams, engineering and supervision for industrial projects." },
     { brg: 90,  rng: 250, href: "projects.html", title: "Projects", text: "Projects we staff, and BravoDoc — our validator for engineering documents." },
-    { brg: 180, rng: 270, href: "careers.html",  title: "Careers",  text: "Open positions for welders, fitters, electricians and engineers." },
+    { brg: 180, rng: 250, href: "careers.html",  title: "Careers",  text: "Open positions for welders, fitters, electricians and engineers." },
     { brg: 270, rng: 250, href: "contact.html",  title: "Contact",  text: "Tell us about your project and the team you need." },
   ];
 
@@ -84,13 +84,12 @@
   /* targets: the emblem's isometric layer, drawn flat on the sheet */
   const LAYER = "M0 -22 L40 -6 L0 10 L-40 -6 Z";
   const WALL = "M-40 -6 L0 10 L0 22 L-40 6 Z";
-  const tg = $("[data-targets]", board), list = $("[data-nodes]", board);
+  const tg = $("[data-targets]", board), list = $("[data-labels]", board);
   const nodes = SECTIONS.map((s, i) => {
-    const li = document.createElement("li");
-    li.className = "in-node";
-    li.style.setProperty("--i", i);
-    li.innerHTML = `<a href="${s.href}" data-i="${i}">${s.title}</a>`;
-    list.append(li);
+    // the label is written along a ring on the card, so it turns with the board (the ring starts at 045°, between sections, so no label is cut at its seam)
+    const li = el("a", { href: s.href, "data-i": i, class: "in-node", style: `--i:${i}` }, list);
+    const txt = el("text", { class: "in-node__t", dy: "-14" }, li);
+    el("textPath", { href: "#in-label-ring", startOffset: `${((s.brg + 315) % 360) / 3.6}%`, "text-anchor": "middle" }, txt).textContent = s.title;
     const g = el("g", { class: "in-target", style: `--i:${i}` }, tg);
     const vec = el("line", { class: "in-vec" }, g);
     const mark = el("g", { class: "in-layer" }, g);
@@ -119,8 +118,8 @@
   };
 
   function layout() {
-    const k = board.clientWidth / 1000;
     card.setAttribute("transform", `rotate(${-heading} ${C} ${C})`);
+    list.setAttribute("transform", `rotate(${-heading} ${C} ${C})`);
     hdg.textContent = norm(heading).toFixed(1).padStart(5, "0");
     drawArc(nearest(heading) + STEP - heading); // to the next section, clockwise
     nodes.forEach((n) => {
@@ -130,8 +129,6 @@
       n.mark.setAttribute("transform", `translate(${x} ${y})`);
       n.vec.setAttribute("x1", x - 34 * sx); n.vec.setAttribute("y1", y - 34 * sy);
       n.vec.setAttribute("x2", C - 190 * sx); n.vec.setAttribute("y2", C - 190 * sy);
-      n.li.style.transform = `translate(${x * k}px, ${y * k}px)`;
-      n.li.classList.toggle("is-low", sy > 0.5);
     });
     const idx = nodes.findIndex((n) => n.brg === norm(nearest(heading)));
     if (idx !== active) {

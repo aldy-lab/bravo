@@ -883,8 +883,9 @@ ol, ul { list-style: none; }
 }
 
 /* ── Hero variant E: a page of the Bravo brand book (industrial.html) ── */
-.ind { --pp: var(--c-blue); --ik: #fff; --ik-2: rgba(255, 255, 255, .6); --ik-3: rgba(255, 255, 255, .16); background: var(--pp); color: var(--ik); }
-[data-mode="drawing"] body.ind { --pp: var(--c-black); background: var(--c-black); }
+.ind { --pp: var(--c-black); --ik: #fff; --ik-2: rgba(255, 255, 255, .58); --ik-3: rgba(255, 255, 255, .14); background: var(--pp); color: var(--ik); transition: background-color .6s cubic-bezier(0.23, 1, 0.32, 1), color .6s cubic-bezier(0.23, 1, 0.32, 1); }
+[data-mode="drawing"] body.ind { --pp: var(--c-white); --ik: var(--c-black); --ik-2: rgba(25, 25, 25, .58); --ik-3: rgba(25, 25, 25, .14); background: var(--pp); color: var(--ik); }
+[data-mode="drawing"] .ind .in-bg .ph__bp { filter: invert(1); opacity: .08; }
 .ind .top, .ind .foot, .ind .skip { display: none; }
 .in-wrap {
   --cf: calc((100vw - 2 * var(--gutter)) / 9.48); /* the cover word spans the full width */
@@ -963,16 +964,11 @@ ol, ul { list-style: none; }
 .in-layer__wall { fill: var(--ik); fill-opacity: .42; transition: fill .3s; }
 .in-target.is-active .in-vec { stroke: var(--accent); stroke-dasharray: none; opacity: 1; stroke-width: 1.5; }
 .in-target.is-active .in-layer__top, .in-target.is-active .in-layer__wall { fill: var(--accent); }
-.in-nodes { position: absolute; inset: 0; pointer-events: none; }
-.in-node { position: absolute; left: 0; top: 0; }
-.in-node a {
-  position: absolute; pointer-events: auto; text-decoration: none; white-space: nowrap; padding: 6px 8px;
-  transform: translate(-50%, calc(-100% - 18px));
-  font: 600 .75rem/1 var(--f-text); letter-spacing: .14em; text-transform: uppercase; transition: color .25s;
-}
-.in-node.is-low a { transform: translate(-50%, 22px); }
-.in-node.is-active a { color: var(--accent); }
-.in-node a:hover { color: var(--accent); }
+.in-node { cursor: pointer; outline: none; }
+.in-node__t { fill: var(--ik); font: 600 21px var(--f-text); letter-spacing: .3em; text-transform: uppercase; transition: fill .3s;
+  stroke: transparent; stroke-width: 34px; paint-order: stroke; vector-effect: none; } /* invisible stroke = a generous tap area along the arc */
+.in-node.is-active .in-node__t { fill: var(--accent); }
+.in-node:hover .in-node__t, .in-node:focus-visible .in-node__t { fill: var(--accent); }
 .in-coord { position: absolute; font: 400 .625rem/1 var(--f-text); color: var(--ik-2); pointer-events: none; }
 .in-coord--t { left: calc(50% + 6px); top: -14px; }
 .in-coord--r { right: -22px; top: calc(50% + 6px); }
@@ -1002,8 +998,8 @@ ol, ul { list-style: none; }
   .in-paths { order: 3; }
   .in-paths { justify-self: stretch; }
   .in-path { min-height: 54px; padding: 10px 12px; }
-  .in-node a { font-size: .625rem; }
   .in-num { font-size: 22px; }
+  .in-node__t { font-size: 26px; letter-spacing: .24em; }
 }
 @media (max-width: 360px) { .in-path span { display: none; } .in-head__nav a { font-size: .6875rem; letter-spacing: .02em; } }
 

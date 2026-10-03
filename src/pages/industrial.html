@@ -14,9 +14,6 @@ body: home ind
       <svg viewBox="0 0 790.89 148" aria-hidden="true"><use href="#logo-h"/></svg>
     </a>
     <span class="in-head__rule" aria-hidden="true"></span>
-    <nav class="in-head__nav" aria-label="Main">
-      <a href="services.html">Services</a><a href="projects.html">Projects</a><a href="careers.html">Careers</a><a href="contact.html">Contact</a>
-    </nav>
     <button class="egg in-mark" type="button" aria-pressed="false" aria-label="Drawing mode" title="B">B</button>
   </header>
 
@@ -35,15 +32,18 @@ body: home ind
     </div>
 
     <div class="in-board" data-in-board>
-      <svg viewBox="0 0 1000 1000" aria-hidden="true">
-        <defs><marker id="in-dim-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 2 L10 5 L0 8 Z"/></marker></defs>
-        <g data-card></g>
-        <g class="in-dwg" data-dwg></g>
-        <g data-targets></g>
-        <path class="in-lubber" d="M500 40 l-9 -18 h18 z"/>
-        <g class="in-hub" data-hub transform="translate(462 464) scale(.2111)"></g>
+      <svg viewBox="0 0 1000 1000" role="group" aria-label="Manoeuvring board — sections">
+        <defs>
+          <path id="in-label-ring" d="M726.27 273.73 A320 320 0 0 1 273.73 726.27 A320 320 0 0 1 726.27 273.73"/>
+          <marker id="in-dim-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 2 L10 5 L0 8 Z"/></marker>
+        </defs>
+        <g data-card aria-hidden="true"></g>
+        <g class="in-dwg" data-dwg aria-hidden="true"></g>
+        <g data-targets aria-hidden="true"></g>
+        <g data-labels></g>
+        <path class="in-lubber" aria-hidden="true" d="M500 40 l-9 -18 h18 z"/>
+        <g class="in-hub" data-hub aria-hidden="true" transform="translate(462 464) scale(.2111)"></g>
       </svg>
-      <ul class="in-nodes" data-nodes aria-label="Sections on the board"></ul>
       <p class="in-hdg" aria-hidden="true">HDG <b data-hdg>000.0</b>°</p>
       <span class="in-coord in-coord--t" aria-hidden="true">0</span>
       <span class="in-coord in-coord--r" aria-hidden="true">90</span>
