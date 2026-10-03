@@ -1,7 +1,7 @@
 /* Hero variant E: the home page laid out like a page of the Bravo brand
-   book — running header, a Contents list whose page numbers are bearings,
+   book — running header, a staggered solid-and-outline headline,
    the radial-tick graphic element as the board, the emblem's isometric
-   layers as targets, and one word across the bottom like the cover.
+   layers as targets, and the drawing-mode egg inking the board's dimensions.
    Self-contained like the other variants, so it can be deleted on its own. */
 (() => {
   "use strict";
@@ -84,23 +84,19 @@
   /* targets: the emblem's isometric layer, drawn flat on the sheet */
   const LAYER = "M0 -22 L40 -6 L0 10 L-40 -6 Z";
   const WALL = "M-40 -6 L0 10 L0 22 L-40 6 Z";
-  const tg = $("[data-targets]", board), list = $("[data-nodes]", board), spec = $("[data-spec]");
+  const tg = $("[data-targets]", board), list = $("[data-nodes]", board);
   const nodes = SECTIONS.map((s, i) => {
     const li = document.createElement("li");
     li.className = "in-node";
     li.style.setProperty("--i", i);
     li.innerHTML = `<a href="${s.href}" data-i="${i}">${s.title}</a>`;
     list.append(li);
-    const row = document.createElement("li");
-    row.style.setProperty("--i", i);
-    row.innerHTML = `<a href="${s.href}" data-i="${i}"><span class="in-contents__n">${brg3(s.brg)}</span><span class="in-contents__t">${s.title}</span></a>`;
-    spec.append(row);
     const g = el("g", { class: "in-target", style: `--i:${i}` }, tg);
     const vec = el("line", { class: "in-vec" }, g);
     const mark = el("g", { class: "in-layer" }, g);
     el("path", { class: "in-layer__wall", d: WALL }, mark);
     el("path", { class: "in-layer__top", d: LAYER }, mark);
-    return { ...s, i, li, row, g, vec, mark };
+    return { ...s, i, li, g, vec, mark };
   });
 
   /* entrance: once per visit; instant afterwards and with reduced motion */
@@ -140,11 +136,11 @@
     const idx = nodes.findIndex((n) => n.brg === norm(nearest(heading)));
     if (idx !== active) {
       active = idx;
-      nodes.forEach((n, i) => [n.li, n.row, n.g].forEach((e) => e.classList.toggle("is-active", i === idx)));
+      nodes.forEach((n, i) => [n.li, n.g].forEach((e) => e.classList.toggle("is-active", i === idx)));
       const n = nodes[idx];
       read.title.textContent = n.title; read.text.textContent = n.text; read.href.href = n.href;
       page.textContent = String(idx + 1).padStart(3, "0");
-      if (booted && wrap.classList.contains("is-ready")) { roll(page); roll(read.title.parentNode); }
+      if (booted && wrap.classList.contains("is-ready")) roll(page);
     }
   }
 
@@ -215,15 +211,10 @@
     go(nodes[+a.dataset.i]);
   };
   list.addEventListener("click", onLink);
-  spec.addEventListener("click", onLink);
-  spec.addEventListener("pointerover", (e) => {
-    const a = e.target.closest("a[data-i]");
-    if (a && e.pointerType === "mouse" && !dragging) steer(nodes[+a.dataset.i].brg);
-  });
-  [list, spec].forEach((l) => l.addEventListener("focusin", (e) => {
+  list.addEventListener("focusin", (e) => {
     const a = e.target.closest("a[data-i]");
     if (a && !dragging) steer(nodes[+a.dataset.i].brg);
-  }));
+  });
   addEventListener("keydown", (e) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     e.preventDefault();
@@ -240,20 +231,6 @@
   new ResizeObserver(() => { layout(); align(); }).observe(board);
   layout();
   booted = true;
-
-  /* the cover word: each letter rises out of the baseline */
-  const cover = $(".in-cover");
-  const sup = cover.querySelector("sup");
-  const word = cover.firstChild.textContent;
-  cover.firstChild.remove();
-  [...word].reverse().forEach((ch, i) => {
-    const span = document.createElement("span");
-    span.className = "in-cover__ch";
-    span.style.setProperty("--i", word.length - 1 - i);
-    span.textContent = ch;
-    cover.prepend(span);
-  });
-  sup.style.setProperty("--i", word.length);
 
   if (entrance) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
