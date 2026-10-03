@@ -752,3 +752,13 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 /* the hero column reaches down over the yard: only its contents take clicks */
 .in-sec--hero .in-col { pointer-events: none; }
 .in-sec--hero .in-col > * { pointer-events: auto; }
+/* the egg button is a light bulb: off on the dark sheet, lit on the drawing */
+.in-mark { color: var(--ik); }
+.in-bulb { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.in-bulb__rays { opacity: 0; transform: scale(.8); transform-origin: 12px 11px; transition: opacity .3s cubic-bezier(0.23, 1, 0.32, 1), transform .3s cubic-bezier(0.23, 1, 0.32, 1); }
+.in-bulb__glass { transition: fill .3s; }
+[data-mode="drawing"] .in-bulb__glass { fill: var(--accent); stroke: var(--accent); }
+[data-mode="drawing"] .in-bulb__rays { opacity: 1; transform: none; stroke: var(--accent); }
+@media (hover: hover) and (pointer: fine) { .in-mark:hover .in-bulb__rays { opacity: .6; transform: none; } }
+/* the drawing is a plain sheet: no picture behind it */
+[data-mode="drawing"] .ind .in-bg { display: none; }
