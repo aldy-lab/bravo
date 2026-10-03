@@ -6,7 +6,8 @@ body: home ind
 ---
 <div class="in-wrap">
   <figure class="ph in-bg" aria-hidden="true"><img class="ph__bp" src="assets/img/port-bp.webp" alt="" loading="lazy"></figure>
-  <div class="in-cross" aria-hidden="true"></div>
+  <div class="in-cross" aria-hidden="true"><i class="in-cross__x"></i><i class="in-cross__y"></i></div>
+  <div class="in-guide" aria-hidden="true"><i class="in-guide__x"></i><i class="in-guide__y"></i><span class="in-guide__read" data-guide-read></span></div>
 
   <!-- running header, as on every page of the brand book -->
   <header class="in-head">
@@ -37,13 +38,15 @@ body: home ind
     </div>
 
     <div class="in-board" data-in-board>
+      <div class="in-sweep" aria-hidden="true"></div>
       <svg viewBox="0 0 1000 1000" aria-hidden="true">
         <g data-card></g>
         <g data-targets></g>
         <path class="in-lubber" d="M500 40 l-9 -18 h18 z"/>
-        <g class="in-hub"><use href="#emblem" x="462" y="464" width="76" height="72"/></g>
+        <g class="in-hub" data-hub transform="translate(462 464) scale(.2111)"></g>
       </svg>
       <ul class="in-nodes" data-nodes aria-label="Sections on the board"></ul>
+      <p class="in-hdg" aria-hidden="true">HDG <b data-hdg>000.0</b>°</p>
       <span class="in-coord in-coord--t" aria-hidden="true">0</span>
       <span class="in-coord in-coord--r" aria-hidden="true">90</span>
     </div>
@@ -51,6 +54,6 @@ body: home ind
 
   <!-- the cover: one word across the full width, like BRAVO on page 001 -->
   <p class="in-cover" aria-hidden="true">Outstaffing<sup>™</sup></p>
-  <p class="in-page" aria-hidden="true" data-page>001</p>
+  <p class="in-page" aria-hidden="true"><span data-page>001</span></p>
 </div>
 <script src="js/industrial.js" defer></script>

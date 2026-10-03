@@ -30,18 +30,29 @@
   /* the card: the brand book's graphic element — a crown of fine radial
      ticks round the centre, thin rings, and a degree scale at the rim */
   const card = $("[data-card]", board);
-  el("circle", { class: "in-ring in-ring--rim", cx: C, cy: C, r: R }, card);
-  [110, 330].forEach((r) => el("circle", { class: "in-ring", cx: C, cy: C, r }, card));
-  el("circle", { class: "in-ring in-ring--dash", cx: C, cy: C, r: 220 }, card);
+  [[110, ""], [220, " in-ring--dash"], [330, ""], [R, " in-ring--rim"]].forEach(([r, mod], i) =>
+    el("circle", { class: "in-ring" + mod, cx: C, cy: C, r, style: `--i:${i}` }, card));
+  const crown = el("g", { class: "in-crown-g" }, card);
+  const scaleG = el("g", { class: "in-scale" }, card);
   for (let d = 0; d < 360; d += 6) { // the crown
     const long = d % 30 === 0;
-    el("line", { class: "in-crown", x1: C, y1: C - 132, x2: C, y2: C - (long ? 178 : 158), transform: `rotate(${d} ${C} ${C})` }, card);
+    el("line", { class: "in-crown", x1: C, y1: C - 132, x2: C, y2: C - (long ? 178 : 158), transform: `rotate(${d} ${C} ${C})` }, crown);
   }
   for (let d = 0; d < 360; d++) {
     const len = d % 10 === 0 ? 18 : d % 5 === 0 ? 11 : 5;
-    el("line", { class: d % 10 === 0 ? "in-tick in-tick--10" : "in-tick", x1: C, y1: C - R, x2: C, y2: C - R + len, transform: `rotate(${d} ${C} ${C})` }, card);
+    el("line", { class: d % 10 === 0 ? "in-tick in-tick--10" : "in-tick", x1: C, y1: C - R, x2: C, y2: C - R + len, transform: `rotate(${d} ${C} ${C})` }, scaleG);
   }
-  for (let d = 0; d < 360; d += 30) el("text", { class: "in-num", x: C, y: C - R + 40, transform: `rotate(${d} ${C} ${C})` }, card).textContent = brg3(d);
+  for (let d = 0; d < 360; d += 30) el("text", { class: "in-num", x: C, y: C - R + 40, transform: `rotate(${d} ${C} ${C})` }, scaleG).textContent = brg3(d);
+
+  /* the hub: the emblem rebuilt from its own paths, so its layers can land one by one */
+  const hub = $("[data-hub]", board);
+  const ORDER = [3, 0, 2, 1]; // symbol order is top, wall, middle, bottom; they land wall, bottom, middle, top
+  document.querySelectorAll("#emblem path").forEach((src, i) => {
+    const path = src.cloneNode(true);
+    path.setAttribute("class", "in-hub__p");
+    path.style.setProperty("--i", ORDER[i]);
+    hub.append(path);
+  });
 
   /* targets: the emblem's isometric layer, drawn flat on the sheet */
   const LAYER = "M0 -22 L40 -6 L0 10 L-40 -6 Z";
@@ -50,12 +61,14 @@
   const nodes = SECTIONS.map((s, i) => {
     const li = document.createElement("li");
     li.className = "in-node";
+    li.style.setProperty("--i", i);
     li.innerHTML = `<a href="${s.href}" data-i="${i}">${s.title}</a>`;
     list.append(li);
     const row = document.createElement("li");
+    row.style.setProperty("--i", i);
     row.innerHTML = `<a href="${s.href}" data-i="${i}"><span class="in-contents__n">${brg3(s.brg)}</span><span class="in-contents__t">${s.title}</span></a>`;
     spec.append(row);
-    const g = el("g", { class: "in-target" }, tg);
+    const g = el("g", { class: "in-target", style: `--i:${i}` }, tg);
     const vec = el("line", { class: "in-vec" }, g);
     const mark = el("g", { class: "in-layer" }, g);
     el("path", { class: "in-layer__wall", d: WALL }, mark);
@@ -63,15 +76,29 @@
     return { ...s, i, li, row, g, vec, mark };
   });
 
-  let heading = 0, target = 0, active = -1, raf = 0, last = 0, onArrive = null;
+  /* entrance: once per visit; instant afterwards and with reduced motion */
+  const wrap = board.closest(".in-wrap");
+  let seen = false;
+  try { seen = !!sessionStorage.getItem("bravo-in"); sessionStorage.setItem("bravo-in", "1"); } catch (e) { /* storage off */ }
+  const entrance = !reduced && !seen;
+  if (!entrance) wrap.classList.add("is-ready", "is-instant");
+
+  let heading = entrance ? -40 : 0, target = 0, active = -1, raf = 0, last = 0, onArrive = null;
   const shortest = (from, to) => from + (((to - from) % 360) + 540) % 360 - 180;
   const nearest = (h) => Math.round(h / STEP) * STEP;
   const read = { title: $('[data-r="title"]'), text: $('[data-r="text"]'), href: $('[data-r="href"]') };
   const page = $("[data-page]");
+  let booted = false;
+  const hdg = $("[data-hdg]");
+  const roll = (node) => {
+    if (reduced || !node.animate) return;
+    node.animate([{ transform: "translateY(70%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 420, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+  };
 
   function layout() {
     const k = board.clientWidth / 1000;
     card.setAttribute("transform", `rotate(${-heading} ${C} ${C})`);
+    hdg.textContent = norm(heading).toFixed(1).padStart(5, "0");
     nodes.forEach((n) => {
       const phi = (n.brg - heading) * Math.PI / 180;
       const sx = Math.sin(phi), sy = -Math.cos(phi);
@@ -89,6 +116,7 @@
       const n = nodes[idx];
       read.title.textContent = n.title; read.text.textContent = n.text; read.href.href = n.href;
       page.textContent = String(idx + 1).padStart(3, "0");
+      if (booted && wrap.classList.contains("is-ready")) { roll(page); roll(read.title.parentNode); }
     }
   }
 
@@ -175,7 +203,6 @@
   });
 
   // the page-wide crosshair passes through the centre of the board
-  const wrap = board.closest(".in-wrap");
   const align = () => {
     const w = wrap.getBoundingClientRect(), b = board.getBoundingClientRect();
     wrap.style.setProperty("--in-cx", (b.left + b.width / 2 - w.left) + "px");
@@ -184,4 +211,49 @@
   new ResizeObserver(align).observe(wrap);
   new ResizeObserver(() => { layout(); align(); }).observe(board);
   layout();
+  booted = true;
+
+  /* the cover word: each letter rises out of the baseline */
+  const cover = $(".in-cover");
+  const sup = cover.querySelector("sup");
+  const word = cover.firstChild.textContent;
+  cover.firstChild.remove();
+  [...word].reverse().forEach((ch, i) => {
+    const span = document.createElement("span");
+    span.className = "in-cover__ch";
+    span.style.setProperty("--i", word.length - 1 - i);
+    span.textContent = ch;
+    cover.prepend(span);
+  });
+  sup.style.setProperty("--i", word.length);
+
+  /* pointer guides: thin lines that follow the cursor across the sheet,
+     with its position in the brand book's -30..30 / 20..-20 coordinates */
+  const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
+  if (fine && !reduced) {
+    const gx = $(".in-guide__x"), gy = $(".in-guide__y"), gr = $("[data-guide-read]");
+    let tx = 0, ty = 0, cx = 0, cy = 0, gRaf = 0;
+    const follow = () => {
+      cx += (tx - cx) * 0.22; cy += (ty - cy) * 0.22;
+      gx.style.transform = `translateY(${cy}px)`;
+      gy.style.transform = `translateX(${cx}px)`;
+      gr.style.transform = `translate(${cx + 14}px, ${cy + 12}px)`;
+      gRaf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.3 ? requestAnimationFrame(follow) : 0;
+    };
+    wrap.addEventListener("pointermove", (e) => {
+      const r = wrap.getBoundingClientRect();
+      tx = e.clientX - r.left; ty = e.clientY - r.top;
+      if (!wrap.classList.contains("is-guided")) { cx = tx; cy = ty; wrap.classList.add("is-guided"); }
+      gr.textContent = `${((tx / r.width) * 60 - 30).toFixed(1)} · ${(20 - (ty / r.height) * 40).toFixed(1)}`;
+      if (!gRaf) gRaf = requestAnimationFrame(follow);
+    });
+    wrap.addEventListener("pointerleave", () => wrap.classList.remove("is-guided"));
+  }
+
+  if (entrance) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      wrap.classList.add("is-ready");
+      setTimeout(() => steer(0), 350);
+    }));
+  }
 })();
