@@ -1327,3 +1327,5 @@ ol, ul { list-style: none; }
 .sc-call__lead { opacity: 0; transition: opacity .25s cubic-bezier(0.23, 1, 0.32, 1); }
 .sc-man--live.is-open .sc-call__lead, .sc-man--live:focus-within .sc-call__lead { opacity: .6; }
 @media (hover: hover) and (pointer: fine) { .sc-man--live:hover .sc-call__lead { opacity: .6; } }
+/* F: the drawing sheet is paper-toned, not white */
+[data-mode="drawing"] body.ind.ind--egg { --pp: #DED8C7; background: var(--pp); }
