@@ -1322,3 +1322,8 @@ ol, ul { list-style: none; }
 /* drawing furniture on the board never takes a click meant for a label */
 .in-dwg, .in-board [data-card], .in-board [data-targets], .in-hub, .in-lubber { pointer-events: none; }
 .in-node__hit { fill: none; stroke: transparent; stroke-width: 70; vector-effect: none !important; pointer-events: stroke; }
+/* F: no item numbers over the crew; the leader line shows only with the open tag */
+.sc-call__ball, .sc-call__no { display: none; }
+.sc-call__lead { opacity: 0; transition: opacity .25s cubic-bezier(0.23, 1, 0.32, 1); }
+.sc-man--live.is-open .sc-call__lead, .sc-man--live:focus-within .sc-call__lead { opacity: .6; }
+@media (hover: hover) and (pointer: fine) { .sc-man--live:hover .sc-call__lead { opacity: .6; } }
