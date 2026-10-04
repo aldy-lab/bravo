@@ -257,7 +257,7 @@
   {
     const L = layer(1, 24), ink2 = inkG(L), cr = crewG(L);
     // the steel frame and the welding set
-    el("path", { d: "M360 400V250 M392 400V250 M352 250h48 M352 400h48 M392 300h86 M392 312h86 M478 300v12" }, ink2);
+    el("path", { d: "M360 400V250 M392 400V250 M352 250h48 M352 400h48 M392 347h88 M392 359h88 M480 347v12" }, ink2);
     el("path", { d: "M548 400V372h38v28 M552 378h14 M556 384h22" }, ink2);
     el("path", { d: "M586 396H1120", class: "sc-rib" }, ink2); // the cable
     // the tower and its ladder
@@ -285,7 +285,7 @@
     track(w2.aL.fore, "r", merge([[0, 0], [27, -50], [62, -50], [65, 60], [67, 30], [69, 60], [73, 0], [100, 0]]));
     track(w2.head, "r", [[0, 0], [18, 0], [21, -14], [24, -14], [26, 10], [62, 10], [64, 0], [74, -16], [86, -16], [89, 0], [100, 0]]);
     track(visor, "o", [[0, 0], [24.5, 0], [25.5, 1], [62, 1], [63, 0], [100, 0]]);
-    const sp = sparksAt(482, 306, cr);
+    const sp = sparksAt(483, 353, cr); // the torch tip: up 84°, fore 4°, tool to 18
     track(sp, "o", blink(28, 62));
     breathe(w2, 5);
     label(420, "WELDING", L);
