@@ -829,3 +829,6 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .rn-pack { fill: var(--ik); stroke: none; }
 /* until the runner reaches his post, his station's effects wait */
 .is-awaiting :is(.sc-sparks, .sc-weldwin, .sc-wave2) { visibility: hidden; }
+.sc-tripod { fill: none; stroke: var(--ik); stroke-width: 1.4; }
+.sc-flash { fill: #fff; stroke: none; mix-blend-mode: screen; }
+[data-mode="drawing"] .sc-flash { fill: var(--accent); mix-blend-mode: normal; opacity: .5; }

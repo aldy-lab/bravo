@@ -459,15 +459,17 @@
     track(wv.head, "r", [[0, 0], [48, 0], [52, -14], [56, 0], [100, 0]]);
   }
 
-  /* 05 THE END — lunch on the beam; a bird lands for the crumbs, everyone
-     turns to look, one points, it is off with a crust; a cup of coffee is
-     passed down the line. */
+  /* 05 THE END — lunch on the beam, and a photographer: he carries his tripod
+     in, sets it up and calls for a picture; they all turn and give a thumbs
+     up (the old lunch-on-a-beam photograph); the flash; he waves a thank-you
+     and goes; back to lunch, and a cup of coffee goes down the line. */
   {
-    const L = layer(5, 20), ink2 = inkG(L), cr = crewG(L);
+    const L = layer(5, 22), ink2 = inkG(L), cr = crewG(L);
     const by2 = 330;
     el("path", { d: `M360 ${by2}H1240 M360 ${by2 + 12}H1240 M360 ${by2}v12 M1240 ${by2}v12` }, ink2);
     [420, 1180].forEach((x) => el("path", { d: `M${x - 30} ${G}L${x} ${by2 + 12}L${x + 30} ${G} M${x - 18} ${G - 24}h36` }, ink2));
     const xs = [500, 640, 780, 920, 1060], men = [];
+    const POSE = [30, 46]; // the picture: turn to the camera, thumbs up
     xs.forEach((x, i) => {
       const s = person(x, by2 + 25, { cls: "sc-luncher" }, cr);
       men.push(s);
@@ -476,37 +478,47 @@
       track(s.lL.sh, "r", sw.map(([t, v]) => [((t + i * 3) % 100), 84 + v]).sort((a, b) => a[0] - b[0]));
       track(s.lR.sh, "r", sw.map(([t, v]) => [((t + i * 3 + 6) % 100), 78 + 24 - v]).sort((a, b) => a[0] - b[0]));
       breathe(s, 5);
-      // all turn to the bird while it is on the beam (it lands at 850)
-      const look = x < 850 ? -16 : 16;
-      if (i !== 2) track(s.head, "r", [[0, 0], [30, 0], [33, look], [56, look], [60, 0], [100, 0]]);
+      track(s.head, "r", [[0, 0], [24, 0], [27, x < 820 ? 10 : -10], [POSE[0], 0], [POSE[1], 0], [100, 0]]);
     });
-    // 0: the sandwich, bitten into
+    // everyone but the coffee hand gives a thumbs up for the picture
+    [3, 4].forEach((i) => {
+      track(men[i].aR.up, "r", [[0, -10], [POSE[0] - 2, -10], [POSE[0], -150], [POSE[1], -150], [POSE[1] + 2, -10], [100, -10]]);
+      track(men[i].aR.fore, "r", [[0, 0], [POSE[0], 30], [POSE[1], 30], [POSE[1] + 2, 0], [100, 0]]);
+    });
+    // 0: the sandwich, bitten into — and held up for the picture
     el("rect", { x: -5, y: 9, width: 10, height: 5, class: "sc-food" }, men[0].aR.fore);
-    track(men[0].aR.up, "r", [[0, -30], [8, -30], [12, -150], [18, -150], [22, -30], [64, -30], [68, -150], [74, -150], [78, -30], [100, -30]]);
-    track(men[0].aR.fore, "r", [[0, 0], [8, 0], [12, -150], [18, -150], [22, 0], [64, 0], [68, -150], [74, -150], [78, 0], [100, 0]]);
-    // 1: the coffee, handed down the line to 2 at the end
+    track(men[0].aR.up, "r", [[0, -30], [8, -30], [12, -150], [18, -150], [22, -30], [POSE[0] - 2, -30], [POSE[0], -150], [POSE[1], -150], [POSE[1] + 2, -30], [64, -30], [68, -150], [74, -150], [78, -30], [100, -30]]);
+    track(men[0].aR.fore, "r", [[0, 0], [8, 0], [12, -150], [18, -150], [22, 0], [POSE[0] - 2, 0], [POSE[0], 20], [POSE[1], 20], [POSE[1] + 2, 0], [64, 0], [68, -150], [74, -150], [78, 0], [100, 0]]);
+    // 1: the coffee, raised for the picture, later handed down the line to 2
     const cup = el("rect", { x: 646, y: 300, width: 8, height: 9, class: "sc-food" }, L);
     track(cup, "x", [[0, 0], [78, 0], [86, 132], [96, 132], [98, 0], [100, 0]]);
+    track(cup, "y", [[0, 0], [POSE[0] - 2, 0], [POSE[0], -30], [POSE[1], -30], [POSE[1] + 2, 0], [100, 0]]);
     track(cup, "o", [[0, 1], [96, 1], [97, 0], [99, 0], [100, 1]]);
-    track(men[1].aL.up, "r", [[0, 40], [76, 40], [80, -80], [86, -80], [90, 40], [100, 40]]);
+    track(men[1].aL.up, "r", [[0, 40], [POSE[0] - 2, 40], [POSE[0], 150], [POSE[1], 150], [POSE[1] + 2, 40], [76, 40], [80, -80], [86, -80], [90, 40], [100, 40]]);
     track(men[2].aR.up, "r", [[0, -10], [84, -10], [86, 60], [90, 60], [92, -150], [96, -150], [98, -10], [100, -10]]);
     track(men[2].aR.fore, "r", [[0, 0], [90, 0], [92, -150], [96, -150], [98, 0], [100, 0]]);
-    // 2: the paper, lowered to look at the bird
+    // 2: the paper, lowered for the picture
     const paper = el("rect", { x: -22, y: -54, width: 44, height: 26, class: "sc-paper" }, men[2].bob);
-    track(paper, "y", [[0, 0], [33, 0], [36, 16], [56, 16], [60, 0], [100, 0]]);
-    track(men[2].head, "r", [[0, 0], [33, 0], [36, 16], [56, 16], [60, 0], [100, 0]]);
-    // 3: points at it
-    track(men[3].aR.up, "r", [[0, -10], [38, -10], [42, 80], [54, 80], [58, -10], [100, -10]]);
-    // the bird: in from the right, lands, pecks, off to the left with a crust
-    const bird = el("g", { class: "sc-bird" }, L);
-    el("path", { d: "M-9 -4 Q-4 -10 0 -4 Q4 -10 9 -4 M-3 -3 Q0 0 3 -3", class: "sc-bird__wing" }, bird);
-    const bx = el("g", {}, L), byg = el("g", {}, bx); byg.append(bird);
-    track(bx, "x", [[0, 1700], [24, 1700], [32, 850], [56, 850], [66, 100], [100, 100]]);
-    track(byg, "y", [[0, 170], [24, 170], [32, by2 - 2], [56, by2 - 2], [66, 120], [100, 120]]);
-    track(bird, "r", merge([[0, 0], [33, 0]], wave(34, 54, 0, 24, 2.5), [[56, 0], [100, 0]]));
-    track(bx, "o", [[0, 0], [23.5, 0], [24, 1], [66, 1], [66.5, 0], [100, 0]]);
-    const crumb = el("rect", { x: 846, y: by2 - 3, width: 4, height: 3, class: "sc-food" }, L);
-    track(crumb, "o", [[0, 1], [55, 1], [56, 0], [99, 0], [100, 1]]);
+    track(paper, "y", [[0, 0], [POSE[0] - 4, 0], [POSE[0] - 1, 18], [POSE[1], 18], [POSE[1] + 3, 0], [100, 0]]);
+    // the photographer and his tripod, in from the left and out again
+    const ph = el("g", {}, cr);
+    track(ph, "x", [[0, -760], [8, -760], [24, 0], [56, 0], [74, -760], [100, -760]], { lin: true });
+    const tri = el("g", {}, ph);
+    el("path", { d: "M720 400L732 352L744 400 M732 352v48 M722 346h20v10h-20Z M742 349l6-2v8l-6-2", class: "sc-tripod" }, tri);
+    const flash = el("circle", { cx: 748, cy: 351, r: 26, class: "sc-flash" }, tri);
+    track(flash, "o", [[0, 0], [38.5, 0], [39, 1], [41, 0], [100, 0]]);
+    const pg = person(700, G, { cls: "sc-photo" }, ph);
+    const wk = walk(10, 24, -1, 0, false, 1.8), wb = walk(56, 72, 1, 1, true, 1.8);
+    ["L", "R"].forEach((S2) => {
+      track(pg[`l${S2}`].th, "r", merge(wk[`th${S2}`], [[24, 0], [56, 0]], wb[`th${S2}`]));
+      track(pg[`l${S2}`].sh, "r", merge(wk[`sh${S2}`], [[24, 0], [56, 0]], wb[`sh${S2}`]));
+    });
+    track(pg.bob, "y", merge(wk.bob, [[24, 0], [26, 6], [36, 6], [38, 4], [42, 4], [44, 0], [56, 0]], wb.bob));
+    // carries the tripod, crouches to the camera, calls them, presses, waves thanks
+    track(pg.aR.up, "r", merge([[0, -60], [24, -60], [26, -80], [36, -80], [38, -96], [42, -96], [44, -10], [48, -10], [50, -160]], wave(50, 54, -160, -140, 1), [[55, -10], [56, -60], [100, -60]]));
+    track(pg.aR.fore, "r", [[0, -20], [36, -20], [38, -30], [42, -30], [44, 0], [100, -20]]);
+    track(pg.aL.up, "r", merge([[0, 30], [24, 30], [27, 150]], wave(27, 34, 150, 175, 1.2), [[35, 30], [100, 30]]));
+    track(pg.head, "r", [[0, 0], [24, 0], [26, -10], [36, -10], [44, 0], [100, 0]]);
   }
 
   /* show the layer for the section in view; the others pause */
