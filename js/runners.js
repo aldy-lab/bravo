@@ -248,25 +248,33 @@
   };
 
   const drawing = () => document.documentElement.dataset.mode === "drawing";
-  new MutationObserver(() => { if (!drawing() && run) { run.stop(); run = null; } })
+  // leaving drawing mode undoes everything, including a runner still waiting to start
+  let pending = null;
+  const reset = () => {
+    clearTimeout(settle);
+    if (run) { run.stop(); run = null; }
+    if (pending) { pending.man.style.opacity = ""; pending.layer.classList.remove("is-awaiting"); pending = null; }
+  };
+  new MutationObserver(() => { if (!drawing()) reset(); })
     .observe(document.documentElement, { attributes: true, attributeFilter: ["data-mode"] });
 
   // wait for the page to stop moving, then send him in
   let settle = 0;
   host.addEventListener("scene:show", (e) => {
-    if (run) { run.stop(); run = null; }
-    clearTimeout(settle);
+    reset();
     if (!drawing()) return;
     const layer = e.detail.layer, step = layer.dataset.for;
     const sec = document.querySelector(`.in-sec[data-step="${step}"]`);
     const man = layer.querySelector(WHO[step]);
     if (!man || !sec) return;
     man.style.opacity = "0";
+    pending = { man, layer };
     layer.classList.add("is-awaiting"); // his station's effects wait for him
     let lastY = -1;
     const wait = () => {
       if (Math.abs(scrollY - lastY) > 0.5) { lastY = scrollY; settle = setTimeout(wait, 140); return; }
-      if (wrap.dataset.step !== step) { man.style.opacity = ""; layer.classList.remove("is-awaiting"); return; }
+      if (wrap.dataset.step !== step) { man.style.opacity = ""; layer.classList.remove("is-awaiting"); pending = null; return; }
+      pending = null;
       run = launch(man, sec, step, layer);
     };
     settle = setTimeout(wait, 200);

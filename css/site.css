@@ -836,15 +836,19 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 
 /* careers: the queue only shows while the recruiter is late (drawing mode), then is served */
 .sc-queue { display: none; }
-.is-awaiting .sc-queue, .is-serving .sc-queue { display: inline; }
-.is-awaiting .sc-arrivals, .is-serving .sc-arrivals { visibility: hidden; }
+[data-mode="drawing"] :is(.is-awaiting, .is-serving) .sc-queue { display: inline; }
+[data-mode="drawing"] :is(.is-awaiting, .is-serving) .sc-arrivals { visibility: hidden; }
 .sc-qhelmet { opacity: 0; }
 .sc-gripe { fill: var(--accent); stroke: none; font: 700 13px var(--f-text); letter-spacing: .04em; }
 .is-serving .sc-gripe { display: none; }
 /* end: the ALDY sign, drawing mode only; planted once its man has arrived */
 /* dark: the poster stands alone; drawing: the signer plants it */
-.sc-aldy-g .sc-signer { display: none; }
-[data-mode="drawing"] .sc-aldy-g .sc-signer { display: inline; }
+.sc-signer-g { display: none; }
+[data-mode="drawing"] .sc-signer-g { display: inline; }
+:root:not([data-mode="drawing"]) .sc-aldy__tilt { animation-name: none !important; }
+.sc-rag { fill: var(--pp); stroke: var(--ik); stroke-width: 1; }
+.sc-tick { fill: none; stroke: var(--ik); stroke-width: 1.4; stroke-linecap: round; }
+.is-awaiting .sc-tick { visibility: hidden; }
 .sc-post { fill: none; stroke: var(--ik); stroke-width: 1.4; }
 .sc-aldy__board { fill: var(--pp); stroke: var(--ik); stroke-width: 1.2; }
 .sc-aldy__mark { fill: var(--ik); }

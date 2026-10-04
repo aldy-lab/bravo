@@ -527,18 +527,53 @@
     // drawing mode: a sign, MADE BY ALDY, and the man who comes to put it up
     const aldyG = el("g", { class: "sc-aldy-g" }, L);
     const sign = el("g", { class: "sc-aldy" }, aldyG);
-    el("path", { d: "M1300 400V386 M1352 400V386", class: "sc-post" }, sign);
-    const link = el("a", { href: "https://aldystudio.com", target: "_blank", rel: "noopener", class: "sc-aldy__link", "aria-label": "Made by ALDY — aldystudio.com" }, sign);
+    const tilt = el("g", { class: "sc-aldy__tilt", style: "transform-origin: 1352px 400px" }, sign); // pivots on its right post
+    el("path", { d: "M1300 400V386 M1352 400V386", class: "sc-post" }, tilt);
+    const link = el("a", { href: "https://aldystudio.com", target: "_blank", rel: "noopener", class: "sc-aldy__link", "aria-label": "Made by ALDY — aldystudio.com" }, tilt);
     el("rect", { x: 1262, y: 340, width: 128, height: 46, class: "sc-aldy__board" }, link);
     el("use", { href: "#aldy", x: 1272, y: 349, width: 28, height: 28, class: "sc-aldy__mark" }, link);
     el("text", { x: 1310, y: 356, class: "sc-aldy__s" }, link).textContent = "MADE BY";
     el("text", { x: 1309, y: 378, class: "sc-aldy__t" }, link).textContent = "ALDY";
-    const signer = person(1232, G, { cls: "sc-signer" }, crewG(aldyG));
-    el("path", { d: "M0 18 v6 M-5 24 h10", class: "sc-tool" }, signer.aR.fore); // the mallet
-    track(signer.aR.up, "r", merge(wave(0, 30, 70, 120, 2.2), [[32, 20], [70, 20], [72, -160], [80, -160], [82, 20], [100, 20]]));
-    track(signer.aR.fore, "r", [[0, 30], [30, 30], [32, 0], [100, 0]]);
-    track(signer.head, "r", [[0, 12], [30, 12], [34, 0], [60, -10], [70, -10], [72, 0], [100, 12]]);
-    breathe(signer, 5);
+    /* his day at the sign (drawing mode): four blows of the mallet, and the
+       last knocks it crooked; he steps back, scratches his helmet, walks up
+       and shoves it level. Thumbs up for the photographer's picture, a wipe
+       of the brow, a polish with a rag, then back a few paces to admire it. */
+    const sg = el("g", { class: "sc-signer-g" }, crewG(aldyG));
+    const pos = el("g", {}, sg);
+    const signer = person(1232, G, { cls: "sc-signer" }, pos);
+    const mallet = el("path", { d: "M0 18 v6 M-5 24 h10", class: "sc-tool" }, signer.aR.fore);
+    const rag = el("rect", { x: -4, y: 19, width: 8, height: 6, class: "sc-rag" }, signer.aR.fore);
+    const P = 8, B = -26; // at the board, and stood back from it
+    const HIT = [2.2, 4.6, 7, 9.4];
+    const W1 = walk(12, 16, 1, 0, true), W2 = walk(22, 26, -1, 1, true), W3 = walk(75, 79, 1, 0, true), W4 = walk(91, 95, -1, 1, true);
+    track(pos, "x", [[0, P], [12, P], [16, B], [22, B], [26, P], [54.5, P], [56, 22], [73.5, 22], [75, P], [79, B], [91, B], [95, P], [100, P]], { lin: true });
+    ["L", "R"].forEach((S) => ["th", "sh"].forEach((j) => track(signer[`l${S}`][j], "r",
+      merge([[0, 0], [11.4, 0]], W1[j + S], [[21.4, 0]], W2[j + S], [[74.4, 0]], W3[j + S], [[90.4, 0]], W4[j + S], [[100, 0]]))));
+    track(signer.aR.up, "r", merge([[0, -60]], ...HIT.map((h) => [[h - 1, -150], [h, -85]]), [[10.4, -85], [11.4, -30]],
+      W1.uaR, [[17, -20], [21.4, -8]], W2.uaR, [[26.5, -60], [27.2, -140], [28.2, -125], [29, -60]],
+      [[31, -60], [32, -150], [44, -150], [45.5, -60]],
+      [[55, -60], [56, -110]], wave(57, 73, -100, -128, 1.5), [[74, -110]], W3.uaR,
+      [[84, -8], [85, -150], [90, -150], [90.6, -8]], W4.uaR, [[96, -8], [99, -60], [100, -60]]));
+    track(signer.aR.fore, "r", merge([[0, 20]], ...HIT.map((h) => [[h - 1, 40], [h, -5]]), [[10.4, -5], [11.4, 10]],
+      W1.faR, [[21.4, 0]], W2.faR, [[26.5, 10], [27.2, 0], [29, 10]], [[31, 10], [32, 30], [44, 30], [45.5, 10]],
+      [[55, 10]], wave(57, 73, -10, 25, 1.5), [[74, 0]], W3.faR,
+      [[84, 0], [85, 30], [90, 30], [90.6, 0]], W4.faR, [[96, 0], [99, 20], [100, 20]]));
+    track(signer.aL.up, "r", merge([[0, 8], [11.4, 8]], W1.uaL, [[16.6, 8], [17.6, 165], [21, 165], [21.6, 8]], W2.uaL,
+      [[47, 8], [48.5, 150], [51, 150], [52.5, 110], [53.5, 8]], [[74.4, 8]], W3.uaL, [[90.4, 8]], W4.uaL, [[100, 8]]));
+    track(signer.aL.fore, "r", merge([[0, 0], [11.4, 0]], W1.faL, [[16.6, 0], [17.6, -110]], wave(18.2, 21, -100, -130, 0.6), [[21.6, 0]], W2.faL,
+      [[47, 0], [48.5, -140], [51, -140], [52.5, -150], [53.5, 0]], [[74.4, 0]], W3.faL, [[90.4, 0]], W4.faL, [[100, 0]]));
+    track(signer.head, "r", merge([[0, 8], [11, 8], [12, 0], [16, 0], [17, 14], [18.5, 14], [19, -4], [20, -4], [20.5, 14], [21.5, 14], [22, 0], [26, 0],
+      [26.5, 8], [29, 8], [31, -12], [44, -12], [46, 0], [48, 0], [49, -10], [53, -10], [54, 0], [56, 10], [74, 10], [75, 0], [80, 0]],
+      wave(80, 84.5, 0, 10, 0.75), [[85, -6], [90, -6], [91, 0], [95, 0], [96, 8], [100, 8]]));
+    track(signer.bob, "y", merge([[0, 0]], ...HIT.map((h) => [[h - 0.3, 0], [h, 1.2], [h + 0.4, 0]]), [[11.4, 0]], W1.bob, W2.bob,
+      wave(30, 74, 0, -0.8, 2), [[74.4, 0]], W3.bob, wave(80, 90, 0, -0.8, 2), W4.bob, [[100, 0]]));
+    track(mallet, "o", [[0, 1], [54.6, 1], [55, 0], [74.6, 0], [75, 1], [100, 1]]);
+    track(rag, "o", [[0, 0], [54.6, 0], [55, 1], [74.6, 1], [75, 0], [100, 0]]);
+    // the sign answers each blow, and the last one knocks it crooked until he shoves it level
+    track(tilt, "r", merge([[0, 0]], ...HIT.slice(0, 3).map((h) => [[h, 0], [h + 0.25, -0.9], [h + 0.8, 0]]),
+      [[9.4, 0], [9.7, 3.6], [10.2, 2.4], [10.6, 2.8], [27, 2.8], [27.6, -1.2], [28.3, 0.5], [29, 0], [100, 0]]));
+    const ticks = el("path", { d: "M1262 334l-3-6 M1268 333v-7 M1274 334l3-6", class: "sc-tick" }, sg);
+    track(ticks, "o", merge([[0, 0]], ...HIT.map((h) => [[h - 0.01, 0], [h, 1], [h + 0.6, 1], [h + 0.61, 0]]), [[100, 0]]));
 
     // the photographer and his tripod, in from the left and out again
     const ph = el("g", {}, cr);
