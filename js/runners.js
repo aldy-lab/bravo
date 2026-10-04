@@ -140,10 +140,15 @@
     const y0 = line[0].y;
     // his post: under his body (not the middle of his bounding box, which his arms pull aside)
     const body = man.querySelector(".sc-body");
+    // read at most four times a second: each read mid-animation restyles the whole scene
+    let fc = null, ft = 0;
     const feet = () => {
+      const now = performance.now();
+      if (fc && now - ft < 250) return fc;
+      ft = now;
       const b = body.getBoundingClientRect();
       const legs = [...man.querySelectorAll(".sc-leg line")].map((l) => l.getBoundingClientRect().bottom);
-      return { x: b.left + b.width / 2, y: legs.length ? Math.max(...legs) : b.bottom + 25 * S };
+      return (fc = { x: b.left + b.width / 2, y: legs.length ? Math.max(...legs) : b.bottom + 25 * S });
     };
     const r = rig();
 

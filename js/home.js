@@ -84,7 +84,7 @@
   /* targets: the emblem's isometric layer, drawn flat on the sheet */
   const LAYER = "M0 -22 L40 -6 L0 10 L-40 -6 Z";
   const WALL = "M-40 -6 L0 10 L0 22 L-40 6 Z";
-  const tg = $("[data-targets]", board), list = $("[data-labels]", board);
+  const tg = $("[data-targets]", board), list = $("[data-labels]", board), vecs = $("[data-vecs]", board), rot = $("[data-rot]", board);
   const nodes = SECTIONS.map((s, i) => {
     // the label is written along a ring on the card, so it turns with the board (the ring starts at 045°, between sections, so no label is cut at its seam)
     const li = el("a", { href: s.href, "data-i": i, class: "in-node", style: `--i:${i}` }, list);
@@ -94,13 +94,20 @@
     el("path", { class: "in-node__hit", d: `M${ax0} ${ay0} A335 335 0 0 1 ${ax1} ${ay1}` }, li);
     const txt = el("text", { class: "in-node__t", dy: "-14" }, li);
     el("textPath", { href: "#in-label-ring", startOffset: `${((s.brg + 315) % 360) / 3.6}%`, "text-anchor": "middle" }, txt).textContent = s.title;
-    const g = el("g", { class: "in-target", style: `--i:${i}`, "data-i": i }, tg);
-    const vec = el("line", { class: "in-vec" }, g);
+    // the bearing line turns with the card; the target itself is a small layer of its own,
+    // moved by a transform, so it stays upright and never repaints
+    const vg = el("g", { class: "in-target in-target--vec", style: `--i:${i}` }, vecs);
+    const ps = Math.sin(s.brg * Math.PI / 180), pc = -Math.cos(s.brg * Math.PI / 180);
+    const vec = el("line", { class: "in-vec", x1: C + (s.rng - 34) * ps, y1: C + (s.rng - 34) * pc, x2: C - 190 * ps, y2: C - 190 * pc }, vg);
+    const box = document.createElement("div");
+    box.className = "in-tgt"; tg.append(box);
+    const tsvg = el("svg", { viewBox: "-50 -50 100 100" }, box);
+    const g = el("g", { class: "in-target", style: `--i:${i}`, "data-i": i }, tsvg);
     const mark = el("g", { class: "in-layer" }, g);
     el("path", { class: "in-layer__wall", d: WALL }, mark);
     el("path", { class: "in-layer__top", d: LAYER }, mark);
     el("circle", { class: "in-target__hit", r: 46 }, mark);
-    return { ...s, i, li, g, vec, mark };
+    return { ...s, i, li, g, vg, vec, mark, box };
   });
 
   /* entrance: once per visit; instant afterwards and with reduced motion */
@@ -118,22 +125,19 @@
   const hdg = $("[data-hdg]");
 
   function layout() {
-    card.setAttribute("transform", `rotate(${-heading} ${C} ${C})`);
-    list.setAttribute("transform", `rotate(${-heading} ${C} ${C})`);
+    rot.style.transform = `rotate(${-heading}deg)`;
     hdg.textContent = norm(heading).toFixed(1).padStart(5, "0");
     drawArc(nearest(heading) + STEP - heading); // to the next section, clockwise
     nodes.forEach((n) => {
       const phi = (n.brg - heading) * Math.PI / 180;
       const sx = Math.sin(phi), sy = -Math.cos(phi);
       const x = C + n.rng * sx, y = C + n.rng * sy;
-      n.mark.setAttribute("transform", `translate(${x} ${y})`);
-      n.vec.setAttribute("x1", x - 34 * sx); n.vec.setAttribute("y1", y - 34 * sy);
-      n.vec.setAttribute("x2", C - 190 * sx); n.vec.setAttribute("y2", C - 190 * sy);
+      n.box.style.transform = `translate(${x - 50}%, ${y - 50}%)`; // the box is 100 units wide: 1% = 1 unit
     });
     const idx = nodes.findIndex((n) => n.brg === norm(nearest(heading)));
     if (idx !== active) {
       active = idx;
-      nodes.forEach((n, i) => [n.li, n.g].forEach((e) => e.classList.toggle("is-active", i === idx)));
+      nodes.forEach((n, i) => [n.li, n.g, n.vg].forEach((e) => e.classList.toggle("is-active", i === idx)));
       const n = nodes[idx];
       read.title.textContent = n.title; read.text.textContent = n.text; read.href.href = n.href;
     }
@@ -175,7 +179,11 @@
     };
     gliding = requestAnimationFrame(stepF);
   };
-  const glideTo = (el) => el && glide(el.getBoundingClientRect().top + scrollY);
+  const glideTo = (el) => {
+    if (!el) return;
+    const known = geo.secs.find((x) => x.el === el); // sections from the cache; anything else is read once
+    glide(known ? known.top : el.getBoundingClientRect().top + scrollY);
+  };
   const scrollTo = (id) => {
     glideTo(document.getElementById(id));
     if (history.replaceState) history.replaceState(null, "", "#" + id);
@@ -261,8 +269,8 @@
     const cx = cur.x + cur.w / 2, cy = cur.y + cur.w / 2;
     // crosshair: the vertical through the centre; the horizontal only from the board's
     // left edge outward, so it never runs through the text
-    crossY.style.transform = `translateX(${cx}px)`;
-    crossY.style.height = `${cur.y + cur.w + 28}px`; // stops just under the board, clear of the yard and its signs
+    // stops just under the board, clear of the yard and its signs; scaled, not resized, so no layout per frame
+    crossY.style.transform = `translateX(${cx}px) scaleY(${Math.max(0, cur.y + cur.w + 28) / innerHeight})`;
     crossX.style.transform = `translate(${cur.x - 48}px, ${cy}px)`;
   };
   // phones: the board lives in the hero only, inside its slot, and scrolls with the
@@ -272,13 +280,25 @@
   // phones have no board at all (CSS hides it); a plain menu navigates instead
   const mount = () => { if (phoneM.matches) { baseW = 0; cur.w = 0; } };
   phoneM.addEventListener("change", () => { mount(); schedule(); });
+  /* geometry is read on resize only, never per frame: a layout read while the scene
+     animates makes the browser restyle the whole crew first (5 ms in Chrome, 14 ms in
+     Safari), on every frame of every scroll */
+  const geo = { a: null, b: null, heroH: 0, secs: [] };
+  const measure = () => {
+    const a = slotHero.getBoundingClientRect(), b = slotMini.getBoundingClientRect();
+    geo.a = { left: a.left, top: a.top + scrollY, width: a.width };
+    geo.b = { left: b.left, top: b.top, width: b.width };
+    geo.heroH = hero.offsetHeight;
+    geo.secs = [...document.querySelectorAll(".in-sec[data-step]")].map((s2) => { const r = s2.getBoundingClientRect(); return { el: s2, top: r.top + scrollY, h: r.height }; });
+  };
   const place = (now) => {
     placing = 0;
     mount();
     if (phoneM.matches) { wrap.classList.remove("is-docked"); return; }
-    const a = slotHero.getBoundingClientRect(), b = slotMini.getBoundingClientRect();
+    if (!geo.a) measure();
+    const a = { left: geo.a.left, top: geo.a.top - scrollY, width: geo.a.width }, b = geo.b;
     if (!baseW || Math.abs(baseW - a.width) > 1) { baseW = a.width; board.style.width = baseW + "px"; if (!cur.w) Object.assign(cur, { x: a.left, y: a.top, w: a.width }); }
-    const p = ease(Math.max(0, Math.min(1, scrollY / (hero.offsetHeight * 0.9))));
+    const p = ease(Math.max(0, Math.min(1, scrollY / (geo.heroH * 0.9))));
     // from where the slot sits with the page at the top, so the board glides straight to the
     // corner instead of first riding up with the hero
     const ay = a.top + scrollY;
@@ -292,16 +312,11 @@
     if (moving) placing = requestAnimationFrame(place); else last2 = 0;
   };
   const schedule = () => { if (!placing) placing = requestAnimationFrame(place); };
-  // the crew holds still while the page moves: the scene repaints less and the scroll stays smooth
-  let still = 0;
-  addEventListener("scroll", () => {
-    if (phoneM.matches) return;
-    wrap.classList.add("is-scrolling");
-    clearTimeout(still); still = setTimeout(() => wrap.classList.remove("is-scrolling"), 160);
-  }, { passive: true });
+  const remeasure = () => { measure(); schedule(); };
   addEventListener("scroll", schedule, { passive: true });
-  addEventListener("resize", schedule);
-  new ResizeObserver(schedule).observe(document.documentElement);
+  addEventListener("resize", remeasure);
+  new ResizeObserver(remeasure).observe(document.documentElement);
+  if (document.fonts) document.fonts.ready.then(remeasure);
   place();
 
   /* ── the section in view sets the step: board heading, scene, counter ── */
@@ -325,11 +340,11 @@
   let wheelLock = 0, wheelAcc = 0;
   addEventListener("wheel", (e) => {
     if (e.ctrlKey || document.querySelector("dialog[open]")) return;
-    const cur = secs[step];
-    if (cur && cur.offsetHeight > innerHeight + 4) {
+    const cur = secs[step], g = geo.secs.find((x) => x.el === cur);
+    if (g && g.h > innerHeight + 4) {
       // a tall section scrolls normally until its edge, then pages on
-      const r = cur.getBoundingClientRect();
-      if (e.deltaY > 0 ? r.bottom > innerHeight + 2 : r.top < -2) return;
+      const top = g.top - scrollY;
+      if (e.deltaY > 0 ? top + g.h > innerHeight + 2 : top < -2) return;
     }
     e.preventDefault();
     if (performance.now() < wheelLock) return;

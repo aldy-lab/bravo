@@ -35,7 +35,9 @@
   /* ── structure ─────────────────────────────────────────── */
   // the ground runs past the drawing both ways, so a scaled-down scene still meets the screen edges
   el("line", { x1: -1600, y1: G, x2: 3200, y2: G, class: "sc-ground" }, shared);
-  for (let x = -1600; x < 3200; x += 14) el("line", { x1: x, y1: G + 2, x2: x - 10, y2: G + 12, class: "sc-hatch" }, shared);
+  let hatch = ""; // one path, not 343 lines: fewer nodes to restyle and paint
+  for (let x = -1600; x < 3200; x += 14) hatch += `M${x} ${G + 2}L${x - 10} ${G + 12}`;
+  el("path", { d: hatch, class: "sc-hatch" }, shared);
 
   // hull block on stands
   const bx = 170, bw = 230, by = 322, bh = 58, dx = 40, dy = -30;

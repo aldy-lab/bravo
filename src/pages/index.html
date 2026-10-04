@@ -12,19 +12,22 @@ body: home ind ind--story
     <span class="in-slot-mini" aria-hidden="true"></span>
 
 
-    <div class="in-board" data-in-board>
-      <svg viewBox="0 0 1000 1000" role="group" aria-label="Manoeuvring board — sections">
-        <defs>
-          <path id="in-label-ring" d="M726.27 273.73 A320 320 0 0 1 273.73 726.27 A320 320 0 0 1 726.27 273.73"/>
-          <marker id="in-dim-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 2 L10 5 L0 8 Z"/></marker>
-        </defs>
+    <div class="in-board" data-in-board role="group" aria-label="Manoeuvring board — sections">
+      <!-- three layers, so a turn of the board is a GPU rotation, not a repaint:
+           what turns (card, bearings, labels), what stays (drawing, lubber, hub), and the targets -->
+      <svg class="in-rot" viewBox="0 0 1000 1000" data-rot>
+        <defs><path id="in-label-ring" d="M726.27 273.73 A320 320 0 0 1 273.73 726.27 A320 320 0 0 1 726.27 273.73"/></defs>
         <g data-card aria-hidden="true"></g>
-        <g class="in-dwg" data-dwg aria-hidden="true"></g>
-        <g data-targets aria-hidden="true"></g>
+        <g data-vecs aria-hidden="true"></g>
         <g data-labels></g>
-        <path class="in-lubber" aria-hidden="true" d="M500 40 l-9 -18 h18 z"/>
-        <g class="in-hub" data-hub aria-hidden="true" transform="translate(462 464) scale(.2111)"></g>
       </svg>
+      <svg class="in-fix" viewBox="0 0 1000 1000" aria-hidden="true">
+        <defs><marker id="in-dim-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 2 L10 5 L0 8 Z"/></marker></defs>
+        <g class="in-dwg" data-dwg></g>
+        <path class="in-lubber" d="M500 40 l-9 -18 h18 z"/>
+        <g class="in-hub" data-hub transform="translate(462 464) scale(.2111)"></g>
+      </svg>
+      <div class="in-tgts" data-targets aria-hidden="true"></div>
       <p class="in-hdg" aria-hidden="true">HDG <b data-hdg>000.0</b>°</p>
     </div>
   </div>
