@@ -24,7 +24,7 @@
   const crewG = el("g", { class: "sc-crew" }, overlay);
 
   // who makes the trip, and which of his station's effects wait for him
-  const WHO = { 0: ".sc-rigger", 1: ".sc-welder", 2: ".sc-inspector", 3: ".sc-recruiter", 4: ".sc-caller", 5: ".sc-luncher" };
+  const WHO = { 0: ".sc-rigger", 1: ".sc-welder", 2: ".sc-inspector", 3: ".sc-recruiter", 4: ".sc-caller", 5: ".sc-signer" };
   const HEAD = { 0: ".in-h1", 1: ".in-h2", 2: ".in-h2", 3: ".in-h2", 4: ".in-h2", 5: ".in-end__line" };
   const CAP = 0.185; // cap top below the text box top, as a share of the font size (measured)
 
@@ -138,7 +138,13 @@
     const head = sec.querySelector(HEAD[step]);
     const line = (head && firstLine(head)) || [{ l: innerWidth * 0.2, r: innerWidth * 0.5, y: innerHeight * 0.35 }];
     const y0 = line[0].y;
-    const feet = () => { const b = man.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.bottom }; };
+    // his post: under his body (not the middle of his bounding box, which his arms pull aside)
+    const body = man.querySelector(".sc-body");
+    const feet = () => {
+      const b = body.getBoundingClientRect();
+      const legs = [...man.querySelectorAll(".sc-leg line")].map((l) => l.getBoundingClientRect().bottom);
+      return { x: b.left + b.width / 2, y: legs.length ? Math.max(...legs) : b.bottom + 25 * S };
+    };
     const r = rig();
 
     // the route: in from the left edge, along the words (hopping the gaps), off the end
@@ -153,12 +159,16 @@
       x = w.r - 4;
     });
     const edge = { x, y: line[line.length - 1].y };
-    moves.push({ k: "leap", d: 0.7 }, { k: "open", d: 0.5 }, { k: "down", d: 2.6 }, { k: "touch", d: 0.55 }, { k: "fold", d: 0.6 });
+    moves.push({ k: "leap", d: 0.7 }, { k: "open", d: 0.5 }, { k: "down", d: 2.6 }, { k: "touch", d: 0.55 }, { k: "fold", d: 0.6 }, { k: "go", d: 30 });
+    // he lands a few paces short of his post, on the side he flies in from, and walks the rest
+    const post0 = feet();
+    const side = edge.x + 80 * S < post0.x ? -1 : 1;
+    const landSpot = () => { const f = feet(); return { x: f.x + side * 64 * S, y: f.y }; };
     let acc = 0;
     moves.forEach((m) => { m.a = acc; acc += m.d; });
     const total = acc;
 
-    let t0 = 0, raf = 0, dead = false, φ = 0, lastT = 0, openAt = null, landAt = null;
+    let t0 = 0, raf = 0, dead = false, φ = 0, lastT = 0, openAt = null, landAt = null, walkX = 0;
     const frame = (now) => {
       if (dead) return;
       if (!t0) { t0 = now; lastT = now; }
@@ -189,7 +199,7 @@
         pose = mix(STAR, HANG, sm(u));
         chute = { open: u, alpha: 1, x: 0, y: -50 - 72 * sm(u * 1.4), sx: Math.min(1.12, s), sy: Math.min(1.15, 0.2 + s), rot: -rot * 0.4 };
       } else if (m.k === "down") { // gliding down onto his post, swinging less and less
-        const f = feet(), from = { x: openAt.x + 10 * S, y: openAt.y };
+        const f = landSpot(), from = { x: openAt.x + 10 * S, y: openAt.y };
         const v = 1 - Math.pow(1 - u, 2);
         px = from.x + (f.x - from.x) * v + Math.sin(t * 1.3) * 10 * S * (1 - u);
         py = from.y + (f.y - from.y) * v;
@@ -199,16 +209,26 @@
         pose.head = (pose.head || 0) + (u > 0.55 ? 14 : 0);
         pose.thL += 6 * Math.sin(t * 2.4) * (1 - fl); pose.thR -= 6 * Math.sin(t * 2.4 + 0.7) * (1 - fl);
         chute = { open: 1, alpha: 1, x: 0, y: -122, sx: 1 + Math.sin(t * 3.2) * 0.03, sy: 1 - Math.sin(t * 3.2) * 0.03, rot: -rot * 0.5 };
-        landAt = { x: px, y: py };
+        landAt = { x: px, y: py }; walkX = px;
       } else if (m.k === "touch") { // feet down, knees give; the canopy sags behind him
-        const f = feet(); px = landAt.x + (f.x - landAt.x) * sm(u); py = f.y;
+        px = landAt.x; py = landAt.y;
         pose = u < 0.4 ? mix(STAND, crouch(1), sm(u / 0.4)) : mix(crouch(1), STAND, sm((u - 0.4) / 0.6));
         const k = sm(u);
         chute = { open: 1, alpha: 1, x: 40 * k, y: -122 + 110 * k, sx: 1 - 0.2 * k, sy: 1 - 0.8 * k, rot: 60 * k };
-      } else { // fold: he turns, gathers it in, and it is gone
-        const f = feet(); px = f.x; py = f.y;
+      } else if (m.k === "fold") { // he turns, gathers it in, and it is gone
+        px = landAt.x; py = landAt.y;
         pose = u < 0.6 ? mix(STAND, { ...REACH, lean: -10, uaL: -30, uaR: -70, faR: -20, head: -14 }, sm(u / 0.6)) : mix({ ...REACH, lean: -10, uaL: -30, uaR: -70, faR: -20, head: -14 }, STAND, sm((u - 0.6) / 0.4));
         chute = { open: 1, alpha: 0.75 * (1 - sm(u)), x: 40 + 8 * u, y: -12, sx: 0.8 * (1 - 0.5 * u), sy: 0.2, rot: 60 };
+      } else { // go: up and over to his post on foot, from where he landed
+        const f = feet();
+        const dx = f.x - walkX, d = dx > 0 ? -1 : 1; // gait: +1 walks left
+        const step = 60 * S * dt;
+        if (Math.abs(dx) <= step + 0.5) return finish();
+        walkX += Math.sign(dx) * step;
+        φ += (60 * dt) / (STRIDE / (2 * Math.PI));
+        px = walkX; py = f.y + (landAt.y - f.y) * 0; // on the ground he shares with his post
+        py = f.y;
+        pose = mix(STAND, gait(φ, d), Math.min(1, (t - m.a) * 4));
       }
       r.place(px, py, S, rot);
       r.pose(pose);
@@ -218,6 +238,7 @@
     const finish = () => {
       dead = true;
       layer.classList.remove("is-awaiting");
+      host.dispatchEvent(new CustomEvent("runner:arrived", { detail: { layer, step } }));
       man.style.transition = "opacity .15s"; man.style.opacity = "";
       r.g.style.transition = "opacity .15s"; r.g.style.opacity = "0";
       setTimeout(() => { r.g.remove(); man.style.transition = ""; }, 200);

@@ -262,6 +262,7 @@
     // crosshair: the vertical through the centre; the horizontal only from the board's
     // left edge outward, so it never runs through the text
     crossY.style.transform = `translateX(${cx}px)`;
+    crossY.style.height = `${cur.y + cur.w + 28}px`; // stops just under the board, clear of the yard and its signs
     crossX.style.transform = `translate(${cur.x - 48}px, ${cy}px)`;
   };
   // phones: the board lives in the hero only, inside its slot, and scrolls with the

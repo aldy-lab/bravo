@@ -390,9 +390,33 @@
     track(rec.aR.up, "r", tidy(br, -40)); track(rec.aR.fore, "r", [[0, 70], [100, 70]]);
     track(rec.head, "r", tidy(bh, 10));
     track(held, "o", tidy(bo, 0));
+    // the queue: when the recruiter is late (he is still on his way over the page),
+    // the next three stand in line with no helmets and grumble until he lands
+    const queue = el("g", { class: "sc-queue" }, cr);
+    const QX = [1196, 1150, 1104];
+    QX.forEach((qx, i) => {
+      const q = person(qx, G, { cls: "sc-queuer" }, queue);
+      q.g.dataset.qx = qx;
+      q.head.lastChild.classList.add("sc-qhelmet");
+      // gripes: a fist shaken, arms thrown up, a turn to the man behind
+      const gest = [
+        merge([[0, 8], [10, 8], [12, -150]], wave(12, 30, -150, -170, 1.4), [[32, -8], [60, -8], [62, -120], [70, -120], [72, -8], [100, -8]]),
+        merge([[0, -8], [20, -8], [22, -140], [30, -140], [32, -8]], wave(48, 64, -150, -175, 1.6), [[66, -8], [100, -8]]),
+        merge([[0, -8], [36, -8], [38, -100], [52, -100], [54, -8], [80, -8], [82, -150], [90, -150], [92, -8], [100, -8]]),
+      ][i];
+      track(q.aR.up, "r", gest);
+      track(q.aL.up, "r", i === 1 ? merge([[0, 8], [20, 8], [22, 140], [30, 140], [32, 8], [100, 8]]) : [[0, 30], [50, 30], [52, 60], [58, 60], [60, 30], [100, 30]]);
+      track(q.aL.fore, "r", [[0, -60], [100, -60]]);
+      track(q.head, "r", [[0, 0], [14 + i * 9, 0], [16 + i * 9, i === 0 ? 18 : -18], [26 + i * 9, i === 0 ? 18 : -18], [28 + i * 9, 0], [70, 0], [72, 10], [80, 10], [82, 0], [100, 0]]);
+      breathe(q, 3 + i);
+      const g = el("text", { x: qx + 8, y: G - 78, class: "sc-gripe" }, queue);
+      g.textContent = ["#@!", "?!", "!!"][i];
+      track(g, "o", merge([[0, 0]], ...[[10, 22], [40, 52], [72, 86]].map(([a, b]) => [[a + i * 6, 0], [a + i * 6 + 1, 1], [b + i * 6, 1], [b + i * 6 + 1, 0]]), [[100, 0]]));
+    });
+    const arrivals = el("g", { class: "sc-arrivals" }, cr);
     [[620, 0], [860, -8], [480, -16]].forEach(([lx, delay], j) => {
       const opts = { delay };
-      const drift = el("g", {}, cr);
+      const drift = el("g", {}, arrivals);
       track(drift, "x", [[0, -40], [12, 30], [24, -20], [36, 0], [40, 0], [62, 1200 - lx], [72, 1200 - lx], [100, 1720 - lx]], { ...opts, lin: true });
       const fall = el("g", {}, drift);
       track(fall, "y", [[0, -420], [36, 0], [100, 0]], { ...opts, lin: true });
@@ -500,6 +524,20 @@
     // 2: the paper, lowered for the picture
     const paper = el("rect", { x: -22, y: -54, width: 44, height: 26, class: "sc-paper" }, men[2].bob);
     track(paper, "y", [[0, 0], [POSE[0] - 4, 0], [POSE[0] - 1, 18], [POSE[1], 18], [POSE[1] + 3, 0], [100, 0]]);
+    // drawing mode: a sign, MADE BY ALDY, and the man who comes to put it up
+    const aldyG = el("g", { class: "sc-aldy-g" }, L);
+    const sign = el("g", { class: "sc-aldy" }, aldyG);
+    el("path", { d: "M980 400V372", class: "sc-post" }, sign);
+    el("rect", { x: 938, y: 348, width: 84, height: 24, class: "sc-aldy__board" }, sign);
+    el("use", { href: "#aldy", x: 944, y: 353, width: 14, height: 14, class: "sc-aldy__mark" }, sign);
+    el("text", { x: 962, y: 364, class: "sc-aldy__t" }, sign).textContent = "MADE BY ALDY";
+    const signer = person(1040, G, { cls: "sc-signer" }, crewG(aldyG));
+    el("path", { d: "M0 18 v6 M-5 24 h10", class: "sc-tool" }, signer.aR.fore); // the mallet
+    track(signer.aR.up, "r", merge(wave(0, 30, 70, 120, 2.2), [[32, 20], [70, 20], [72, -160], [80, -160], [82, 20], [100, 20]]));
+    track(signer.aR.fore, "r", [[0, 30], [30, 30], [32, 0], [100, 0]]);
+    track(signer.head, "r", [[0, 12], [30, 12], [34, 0], [60, -10], [70, -10], [72, 0], [100, 12]]);
+    breathe(signer, 5);
+
     // the photographer and his tripod, in from the left and out again
     const ph = el("g", {}, cr);
     track(ph, "x", [[0, -760], [8, -760], [24, 0], [56, 0], [74, -760], [100, -760]], { lin: true });
@@ -527,7 +565,7 @@
   /* phones: no room for the whole yard, so each screen gets a close-up —
      a camera on one worker (and whoever is beside him). x is where he
      stands, h how much height the shot takes in. */
-  const SHOT = { 0: { x: 400, h: 240 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 640, h: 210 } };
+  const SHOT = { 0: { x: 400, h: 240 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 760, h: 210 } };
   const STRIP = 150; // px
   const phone = () => innerWidth < 1100;
   const aim = () => {
@@ -536,6 +574,39 @@
     const w = shot.h * (host.clientWidth / STRIP);
     svg.setAttribute("viewBox", `${(shot.x - w * 0.3).toFixed(1)} ${420 - shot.h} ${w.toFixed(1)} ${shot.h}`);
   };
+  /* hiring day, late start: when the recruiter lands, the queue is served one by one —
+     a helmet each, then off through the gate, the others stepping up — and then
+     the day carries on as usual */
+  host.addEventListener("runner:arrived", (e) => {
+    if (e.detail.step !== "3") return;
+    const L = e.detail.layer, q = [...L.querySelectorAll(".sc-queuer")];
+    if (!q.length || !q[0].animate) return;
+    L.classList.add("is-serving");
+    const anims = [];
+    const GAP = 1.9;
+    q.forEach((m, i) => {
+      const x0 = +m.dataset.qx, until = i * GAP; // his turn
+      const moves = [{ translate: "0px 0px", offset: 0 }];
+      const total = until + 0.6 + 3.4;
+      for (let k = 0; k < i; k++) moves.push({ translate: `${(k + 1) * 46}px 0px`, offset: Math.min(0.99, (k * GAP + 0.9) / total) });
+      const at = x0 + i * 46;
+      moves.push({ translate: `${i * 46}px 0px`, offset: Math.min(0.99, (until + 0.6) / total) });
+      moves.push({ translate: `${1760 - x0}px 0px`, offset: 1 });
+      anims.push(m.animate(moves, { duration: total * 1000, fill: "forwards", easing: "linear" }));
+      const helm = m.querySelector(".sc-qhelmet");
+      anims.push(helm.animate([{ opacity: 0 }, { opacity: 0, offset: Math.max(0.01, (until + 0.3) / total) }, { opacity: 1, offset: Math.min(0.99, (until + 0.4) / total) }, { opacity: 1 }], { duration: total * 1000, fill: "forwards" }));
+      // legs walk while he moves on
+      m.querySelectorAll(".sc-leg").forEach((leg, li) => anims.push(leg.animate(
+        [{ transform: `rotate(${li % 2 ? -18 : 18}deg)` }, { transform: `rotate(${li % 2 ? 18 : -18}deg)` }],
+        { duration: 300, iterations: Math.ceil(3400 / 300), direction: "alternate", delay: (until + 0.6) * 1000 })));
+      void at;
+    });
+    setTimeout(() => {
+      L.classList.remove("is-serving");
+      anims.forEach((a) => a.cancel());
+    }, ((q.length - 1) * GAP + 4.2) * 1000);
+  });
+
   /* the layer for the section in view; js/runners.js brings its crew in over the page */
   let shown = null;
   const show = () => {

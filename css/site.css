@@ -507,7 +507,7 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .in-cross::before, .in-cross::after { content: none; }
 .in-cross__x, .in-cross__y { position: absolute; background: var(--ik-3); transition: background-color .6s; }
 .in-cross__x { left: 0; top: 0; width: 100vw; height: 1px; }
-.in-cross__y { top: 0; bottom: 0; left: 0; width: 1px; }
+.in-cross__y { top: 0; left: 0; width: 1px; height: 100%; }
 
 .in-hdg { position: absolute; right: 0; top: -2px; font: 500 .6875rem/1 var(--f-text); letter-spacing: .14em; color: var(--ik-2); }
 .in-hdg b { font: 300 1.5rem/1 var(--f-display); font-stretch: 105%; letter-spacing: 0; color: var(--ik); font-variant-numeric: tabular-nums; margin-left: 6px; }
@@ -832,3 +832,27 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .sc-tripod { fill: none; stroke: var(--ik); stroke-width: 1.4; }
 .sc-flash { fill: #fff; stroke: none; mix-blend-mode: screen; }
 [data-mode="drawing"] .sc-flash { fill: var(--accent); mix-blend-mode: normal; opacity: .5; }
+
+/* made by ALDY */
+.in-made { margin-top: 18px; }
+.aldy { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--ik-2); text-decoration: none; font-size: .8125rem; letter-spacing: .04em; transition: color .25s; }
+.aldy svg { width: 14px; height: 14px; fill: currentColor; opacity: .7; transition: opacity .25s; }
+.aldy b { font-weight: 700; letter-spacing: .08em; }
+@media (hover: hover) and (pointer: fine) { .aldy:hover { color: var(--ik); } .aldy:hover svg { opacity: 1; } }
+
+/* careers: the queue only shows while the recruiter is late (drawing mode), then is served */
+.sc-queue { display: none; }
+.is-awaiting .sc-queue, .is-serving .sc-queue { display: inline; }
+.is-awaiting .sc-arrivals, .is-serving .sc-arrivals { visibility: hidden; }
+.sc-qhelmet { opacity: 0; }
+.sc-gripe { fill: var(--accent); stroke: none; font: 700 13px var(--f-text); letter-spacing: .04em; }
+.is-serving .sc-gripe { display: none; }
+/* end: the ALDY sign, drawing mode only; planted once its man has arrived */
+.sc-aldy-g { display: none; }
+[data-mode="drawing"] .sc-aldy-g { display: inline; }
+.sc-post { fill: none; stroke: var(--ik); stroke-width: 1.4; }
+.sc-aldy__board { fill: var(--pp); stroke: var(--ik); stroke-width: 1.2; }
+.sc-aldy__mark { fill: var(--ik); }
+.sc-aldy__t { fill: var(--ik); stroke: none; font: 700 8px var(--f-text); letter-spacing: .12em; }
+.sc-aldy { transition: transform .7s cubic-bezier(0.34, 1.4, 0.64, 1), opacity .3s; }
+.is-awaiting .sc-aldy { transform: translateY(40px); opacity: 0; }
