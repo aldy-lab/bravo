@@ -833,14 +833,6 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .sc-flash { fill: #fff; stroke: none; mix-blend-mode: screen; }
 [data-mode="drawing"] .sc-flash { fill: var(--accent); mix-blend-mode: normal; opacity: .5; }
 
-/* made by ALDY */
-.in-made { position: absolute; right: var(--gutter); bottom: 14px; z-index: 3; pointer-events: auto; }
-.in-sec--end { position: relative; }
-@media (max-width: 1099px) { .in-made { bottom: calc(var(--scene-h, 140px) + 4px); } }
-.aldy { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--ik-2); text-decoration: none; font-size: .8125rem; letter-spacing: .04em; transition: color .25s; }
-.aldy svg { width: 14px; height: 14px; fill: currentColor; opacity: .7; transition: opacity .25s; }
-.aldy b { font-weight: 700; letter-spacing: .08em; }
-@media (hover: hover) and (pointer: fine) { .aldy:hover { color: var(--ik); } .aldy:hover svg { opacity: 1; } }
 
 /* careers: the queue only shows while the recruiter is late (drawing mode), then is served */
 .sc-queue { display: none; }
