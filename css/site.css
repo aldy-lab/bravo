@@ -812,3 +812,20 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 @keyframes in-reveal { from { clip-path: circle(0 at var(--vx) var(--vy)); } to { clip-path: circle(var(--vr) at var(--vx) var(--vy)); } }
 /* no colour tweening underneath the reveal: the circle is the transition */
 .is-theming, .is-theming * { transition: none !important; }
+
+/* the stories' props */
+.sc-lamp, .sc-pulse { fill: var(--accent); stroke: none; }
+.sc-plank { fill: var(--ik); stroke: none; opacity: .6; }
+.sc-defect { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.sc-mark { fill: none; stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.sc-fresh { fill: var(--ik); fill-opacity: .14; stroke: none; }
+.sc-held { fill: var(--ik); stroke: var(--ik); }
+.sc-ring, .sc-wave2 { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+.sc-dot2 { fill: var(--ik); stroke: none; }
+.sc-bird__wing { fill: none; stroke: var(--ik); stroke-width: 1.8; stroke-linecap: round; }
+/* the runner's parachute */
+.rn-lines { fill: none; stroke: var(--ik); stroke-width: 1; }
+.rn-canopy .sc-canopy { fill: var(--pp); stroke: var(--ik); stroke-width: 1.2; }
+.rn-pack { fill: var(--ik); stroke: none; }
+/* until the runner reaches his post, his station's effects wait */
+.is-awaiting :is(.sc-sparks, .sc-weldwin, .sc-wave2) { visibility: hidden; }

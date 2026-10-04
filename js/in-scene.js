@@ -134,8 +134,11 @@
     if (!seen.has(100)) seen.set(100, seen.get(0));
     const body = [...seen.entries()].sort((a, b) => a[0] - b[0]).map(([p, v]) => `${p}% { ${fmt(v)}; animation-timing-function: ${tf}; }`).join(" ");
     sheet.push(`@keyframes ${name} { ${body} }`);
-    node.style.animationName = name;
-    if (opts.delay) node.style.animationDelay = `${opts.delay}s`;
+    // a node may carry several tracks (say a slide and a fade): list them, not overwrite
+    const prev = node.style.animationName;
+    node.style.animationName = prev ? `${prev}, ${name}` : name;
+    const d = `${opts.delay || 0}s`;
+    node.style.animationDelay = prev ? `${node.style.animationDelay || "0s"}, ${d}` : d;
     node.classList.add("sc-tl");
   };
   const merge = (...lists) => lists.flat();
@@ -241,190 +244,269 @@
   };
   const breathe = (m, step = 4) => { const o = []; for (let t = 0; t < 100; t += step) o.push([t, 0], [t + step / 2, -0.8]); track(m.bob, "y", o); };
 
-  /* 01 SERVICES — three trades at work: welding, scaffolding, electrical */
+  /* ── the screens' stories ──────────────────────────────────────────── */
+  const beat = (pairs) => pairs; // readability: [percent, value] lists
+  const blink = (a, b, on = 1, off = 0) => [[0, off], [a - 0.01, off], [a, on], [b, on], [b + 0.01, off], [100, off]];
+  const wave = (a, b, lo, hi, step = 2.2) => { const o = []; let k = 0; for (let t = a; t < b; t += step, k++) o.push([t, k % 2 ? hi : lo]); return o; };
+
+  /* 01 SERVICES — power on, a seam welded, a plank laid: the electrician
+     throws the breaker, the current runs down the cable, the welder drops
+     his visor and runs the seam; up the tower the scaffolder lays a plank and
+     nails it; the welder lifts his visor, wipes his brow and gives the
+     electrician a thumbs up; power off. */
   {
-    const L = layer(1, 12), ink2 = inkG(L), cr = crewG(L);
-    // welding: a steel frame, the welder at its seam
+    const L = layer(1, 24), ink2 = inkG(L), cr = crewG(L);
+    // the steel frame and the welding set
     el("path", { d: "M360 400V250 M392 400V250 M352 250h48 M352 400h48 M392 300h86 M392 312h86 M478 300v12" }, ink2);
-    const w2 = person(512, G, { cls: "sc-welder" }, cr);
-    el("rect", { x: -6.5, y: -12, width: 13, height: 9, rx: 2, class: "sc-visor sc-visor--on" }, w2.head);
-    el("line", { x1: 0, y1: 11, x2: 0, y2: 18, class: "sc-tool" }, w2.aR.fore);
-    const jit = []; for (let t = 0; t < 100; t += 2) jit.push([t, 84 + (Math.round(t / 2) % 2 ? 5 : 0)]);
-    track(w2.aR.up, "r", jit); track(w2.aR.fore, "r", [[0, 6], [50, 0], [100, 6]]);
-    track(w2.aL.up, "r", [[0, 40], [100, 40]]); track(w2.aL.fore, "r", [[0, -50], [100, -50]]);
-    track(w2.head, "r", [[0, 10], [100, 10]]);
-    sparksAt(482, 306, cr);
-    label(420, "WELDING", L);
-    // scaffolding: a tower with a ladder, a scaffolder climbing it and back
+    el("path", { d: "M548 400V372h38v28 M552 378h14 M556 384h22" }, ink2);
+    el("path", { d: "M586 396H1120", class: "sc-rib" }, ink2); // the cable
+    // the tower and its ladder
     el("path", { d: "M740 400V230 M860 400V230 M736 230h128 M736 300h128 M736 350h128 M740 400L860 300 M740 300L860 230" }, ink2);
     for (let y = 392; y > 232; y -= 14) el("line", { x1: 778, y1: y, x2: 802, y2: y, class: "sc-rib" }, ink2);
     el("path", { d: "M778 400V226 M802 400V226" }, ink2);
+    // the cabinet, its breaker and lamps
+    el("path", { d: "M1120 400V286h84v114 M1120 300h84 M1162 300v100" }, ink2);
+    const leverR = el("g", { transform: "translate(1140 336)" }, L);
+    const lever = el("line", { x1: 0, y1: 0, x2: 0, y2: -14, class: "sc-tool" }, leverR);
+    track(lever, "r", beat([[0, -40], [11, -40], [12.5, 40], [91, 40], [92.5, -40], [100, -40]]));
+    [0, 1, 2].forEach((i) => { const l = el("rect", { x: 1132 + i * 14, y: 290, width: 8, height: 6, class: "sc-lamp" }, L); track(l, "o", [[0, .18], [12 + i, .18], [12.2 + i, 1], [92, 1], [92.2, .18], [100, .18]]); });
+    // the current running down the cable to the set
+    const pulse = el("circle", { cx: 1120, cy: 396, r: 3.5, class: "sc-pulse" }, L);
+    track(pulse, "x", [[0, 0], [13, 0], [22, -534], [100, -534]], { lin: true });
+    track(pulse, "o", blink(13, 22));
+    // the welder
+    const w2 = person(512, G, { cls: "sc-welder" }, cr);
+    const visor = el("rect", { x: -6.5, y: -12, width: 13, height: 9, rx: 2, class: "sc-visor" }, w2.head);
+    el("line", { x1: 0, y1: 11, x2: 0, y2: 18, class: "sc-tool" }, w2.aR.fore);
+    const jit = wave(28, 62, 82, 88, 1.1);
+    track(w2.aR.up, "r", merge([[0, 30], [24, 30], [27, 84]], jit, [[62, 84], [64, 30], [74, 30], [77, -160], [83, -160], [86, 30], [100, 30]]));
+    track(w2.aR.fore, "r", merge([[0, 20], [24, 20], [27, 4], [62, 4], [64, 20], [74, 20], [77, -10], [83, -10], [86, 20], [100, 20]]));
+    track(w2.aL.up, "r", merge([[0, 20], [27, 40], [62, 40], [65, 150], [70, 150], [73, 20], [100, 20]]));
+    track(w2.aL.fore, "r", merge([[0, 0], [27, -50], [62, -50], [65, 60], [67, 30], [69, 60], [73, 0], [100, 0]]));
+    track(w2.head, "r", [[0, 0], [18, 0], [21, -14], [24, -14], [26, 10], [62, 10], [64, 0], [74, -16], [86, -16], [89, 0], [100, 0]]);
+    track(visor, "o", [[0, 0], [24.5, 0], [25.5, 1], [62, 1], [63, 0], [100, 0]]);
+    const sp = sparksAt(482, 306, cr);
+    track(sp, "o", blink(28, 62));
+    breathe(w2, 5);
+    label(420, "WELDING", L);
+    // the scaffolder: up the ladder, lays the plank, nails it, back down
     const climb = el("g", {}, cr);
     const sc = person(790, G, { cls: "sc-climber" }, climb);
-    track(climb, "y", [[0, 0], [8, 0], [42, -118], [58, -118], [92, 0], [100, 0]], { lin: true });
-    const rung = (a, b, base, amp) => { const o = []; let k = 0; for (let t = a; t < b; t += 2.5, k++) o.push([t, base + (k % 2 ? amp : -amp)]); o.push([b, base]); return o; };
-    track(sc.aL.up, "r", merge([[0, 8], [6, 170]], rung(8, 42, 165, 14), [[46, 150], [54, 150]], rung(58, 92, 165, 14), [[96, 8], [100, 8]]));
-    track(sc.aR.up, "r", merge([[0, -8], [6, 190]], rung(8, 42, 195, -14), [[46, 210], [54, 210]], rung(58, 92, 195, -14), [[96, -8], [100, -8]]));
-    track(sc.lL.th, "r", merge(rung(8, 42, -20, 20), rung(58, 92, -20, 20), [[100, 0]]));
-    track(sc.lL.sh, "r", merge(rung(8, 42, 25, 25), rung(58, 92, 25, 25), [[100, 0]]));
-    track(sc.lR.th, "r", merge(rung(8, 42, -20, -20), rung(58, 92, -20, -20), [[100, 0]]));
-    track(sc.lR.sh, "r", merge(rung(8, 42, 25, -25), rung(58, 92, 25, -25), [[100, 0]]));
-    track(sc.head, "r", [[0, 0], [46, -12], [54, 12], [58, 0], [100, 0]]);
-    label(800, "SCAFFOLDING", L);
-    // electrical: a cabinet with indicator lights, the electrician at work
-    el("path", { d: "M1120 400V286h84v114 M1120 300h84 M1162 300v100 M1204 360h40 Q1290 360 1300 400" }, ink2);
-    [0, 1, 2].forEach((i) => el("rect", { x: 1132 + i * 14, y: 290, width: 8, height: 6, class: "sc-led", style: `--d:${i * 0.4}s` }, L));
+    track(climb, "y", [[0, 0], [4, 0], [28, -118], [60, -118], [86, 0], [100, 0]], { lin: true });
+    const rung = (a, b, base, amp) => { const o = []; let k = 0; for (let t = a; t < b; t += 2.2, k++) o.push([t, base + (k % 2 ? amp : -amp)]); o.push([b, base]); return o; };
+    track(sc.aL.up, "r", merge([[0, 8], [3, 170]], rung(4, 28, 165, 14), [[30, 60], [44, 60], [46, 8], [60, 8], [62, 170]], rung(62, 86, 165, 14), [[88, 8], [100, 8]]));
+    track(sc.aR.up, "r", merge([[0, -8], [3, 190]], rung(4, 28, 195, -14), [[30, -80], [42, -80]], wave(44, 58, -150, -100, 1.4), [[60, -8], [62, 190]], rung(62, 86, 195, -14), [[88, -8], [100, -8]]));
+    track(sc.lL.th, "r", merge(rung(4, 28, -20, 20), [[30, 0], [60, 0]], rung(62, 86, -20, 20), [[100, 0]]));
+    track(sc.lL.sh, "r", merge(rung(4, 28, 25, 25), [[30, 0], [60, 0]], rung(62, 86, 25, 25), [[100, 0]]));
+    track(sc.lR.th, "r", merge(rung(4, 28, -20, -20), [[30, 0], [60, 0]], rung(62, 86, -20, -20), [[100, 0]]));
+    track(sc.lR.sh, "r", merge(rung(4, 28, 25, -25), [[30, 0], [60, 0]], rung(62, 86, 25, -25), [[100, 0]]));
+    track(sc.head, "r", [[0, 0], [30, 0], [32, 14], [58, 14], [60, 0], [100, 0]]);
+    const plank = el("rect", { x: 744, y: 225, width: 112, height: 5, class: "sc-plank" }, L);
+    track(plank, "x", [[0, 60], [30, 60], [42, 0], [100, 0]]);
+    track(plank, "o", [[0, 0], [30, 0], [31, 1], [96, 1], [99, 0], [100, 0]]);
+    // the electrician
     const e = person(1240, G, { cls: "sc-sparky" }, cr);
-    track(e.aR.up, "r", [[0, 82], [100, 82]]);
-    const twist = []; for (let t = 0; t < 100; t += 3) twist.push([t, Math.round(t / 3) % 2 ? 18 : -10]);
-    track(e.aR.fore, "r", twist);
-    el("line", { x1: 0, y1: 11, x2: 0, y2: 19, class: "sc-tool" }, e.aR.fore);
-    track(e.head, "r", [[0, 8], [40, 8], [46, -10], [60, -10], [66, 8], [100, 8]]);
+    track(e.aR.up, "r", [[0, 10], [8, 10], [11, 84], [14, 84], [17, 10], [74, 10], [77, -165], [83, -165], [86, 10], [89, 10], [91, 84], [93, 84], [95, 10], [100, 10]]);
+    track(e.aR.fore, "r", [[0, 0], [11, -20], [14, -20], [17, 0], [77, 0], [78, -30], [80, 10], [82, -30], [84, 0], [100, 0]]);
+    track(e.head, "r", [[0, 8], [10, 8], [18, -18], [24, -18], [28, 8], [72, 8], [74, -20], [86, -20], [88, 8], [100, 8]]);
     breathe(e, 5);
     label(1180, "ELECTRICAL", L);
   }
 
-  /* 02 PROJECTS — a hull in dry dock: painters on a cradle, an inspector on his rounds */
+  /* 02 PROJECTS — the inspector walks the hull with his torch, finds a bad
+     patch, calls the painters down; they paint it over; he checks it under
+     the torch, thumbs up, and walks back as the cradle goes up again. */
   {
-    const L = layer(2, 16), ink2 = inkG(L), cr = crewG(L);
+    const L = layer(2, 28), ink2 = inkG(L), cr = crewG(L);
     el("path", { d: "M320 226H1210L1300 200L1262 296Q1232 370 1150 372H420Q352 372 332 324Z" }, ink2);
-    el("path", { d: "M340 226V170H470V226 M356 186h20 M386 186h20 M416 186h20 M446 186h20 M400 170V146h14V170", class: "" }, ink2);
+    el("path", { d: "M340 226V170H470V226 M356 186h20 M386 186h20 M416 186h20 M446 186h20 M400 170V146h14V170" }, ink2);
     el("line", { x1: 330, y1: 312, x2: 1272, y2: 312, class: "sc-rib sc-dash" }, ink2);
     for (let x = 520; x < 1180; x += 60) el("line", { x1: x, y1: 228, x2: x, y2: 370, class: "sc-rib" }, ink2);
     [460, 640, 820, 1000, 1120].forEach((x) => el("rect", { x: x - 14, y: 372, width: 28, height: 28 }, ink2));
-    // the cradle hangs from the deck on two falls and travels down the side
     el("path", { d: "M690 340V176 M850 340V176 M680 176h20 M840 176h20", class: "sc-rib" }, ink2);
+    // the bad patch, and the fresh paint over it
+    const bad = el("path", { d: "M752 280l10 8l-4 6l12 4l-8 8l10 6 M760 296l14-2", class: "sc-defect" }, L);
+    const ring = el("circle", { cx: 768, cy: 298, r: 22, class: "sc-mark" }, L);
+    const fresh = el("rect", { x: 740, y: 280, width: 58, height: 36, class: "sc-fresh" }, L);
+    track(bad, "o", [[0, 1], [60, 1], [70, 0], [98, 0], [99, 1], [100, 1]]);
+    track(ring, "o", [[0, 0], [36, 0], [37, 1], [46, 1], [47, 0], [79, 0], [80, 1], [86, 1], [87, 0], [100, 0]]);
+    track(fresh, "o", [[0, 0], [58, 0], [72, 1], [97, 1], [99, 0], [100, 0]]);
+    // the cradle and its painters
     const cradle = el("g", {}, L);
-    track(cradle, "y", [[0, 0], [10, 0], [42, 78], [58, 78], [90, 0], [100, 0]]);
-    el("path", { d: "M680 250h180 M680 256h180 M690 226V250 M850 226V250", class: "sc-beam" }, cradle);
+    track(cradle, "y", [[0, 0], [46, 0], [56, 84], [86, 84], [96, 0], [100, 0]]);
+    el("path", { d: "M680 250h180 M680 256h180", class: "sc-beam" }, cradle);
     const cc = crewG(cradle);
     [735, 805].forEach((x, i) => {
       const pnt = person(x, 250, { cls: "sc-painter" }, cc);
-      const roll = []; for (let t = 0; t < 100; t += 4) roll.push([t, (Math.round(t / 4) + i) % 2 ? 150 : 110]);
-      track(pnt.aR.up, "r", roll.map(([t, v]) => [t, -v]));
-      track(pnt.aR.fore, "r", roll.map(([t, v]) => [t, v > 130 ? -30 : 0]));
       el("path", { d: "M0 11 v10 M-5 21 h10", class: "sc-tool" }, pnt.aR.fore);
+      const roll = wave(58, 74, -112, -78, 1.8).map(([t, v]) => [t + i * 0.9, v]);
+      track(pnt.aR.up, "r", merge([[0, -20], [44, -20], [48, -120], [56, -120]], roll, [[76, -20], [84, -20], [86, -160], [89, -140], [92, -20], [100, -20]]));
+      track(pnt.aR.fore, "r", [[0, 0], [100, 0]]);
+      track(pnt.head, "r", [[0, 0], [40, 0], [42, 16], [48, 16], [50, 0], [84, 0], [86, 12], [92, 12], [94, 0], [100, 0]]);
       breathe(pnt, 6);
     });
-    // the inspector walks the dock floor with a torch, there and back
+    // the inspector: out with the torch, stops, calls up, checks, thumbs up, back
     const rounds = el("g", {}, cr);
-    track(rounds, "x", [[0, 0], [45, 520], [55, 520], [100, 0]], { lin: true });
+    track(rounds, "x", [[0, 0], [35, 300], [88, 300], [100, 0]], { lin: true });
     const ins = person(470, G, { cls: "sc-inspector" }, rounds);
-    const go2 = walk(0, 45, -1, 0, false, 2.6), back2 = walk(55, 100, 1, 1, false, 2.6);
+    const out = walk(0, 35, -1, 0, false, 2.4), back = walk(88, 100, 1, 1, true, 1.6);
     ["L", "R"].forEach((S) => {
-      track(ins[`l${S}`].th, "r", merge(go2[`th${S}`], [[45, 0], [55, 0]], back2[`th${S}`]));
-      track(ins[`l${S}`].sh, "r", merge(go2[`sh${S}`], [[45, 0], [55, 0]], back2[`sh${S}`]));
+      track(ins[`l${S}`].th, "r", merge(out[`th${S}`], [[35, 0], [88, 0]], back[`th${S}`]));
+      track(ins[`l${S}`].sh, "r", merge(out[`sh${S}`], [[35, 0], [88, 0]], back[`sh${S}`]));
     });
-    track(ins.bob, "y", merge(go2.bob, [[45, 0], [55, 0]], back2.bob));
-    track(ins.aR.up, "r", [[0, -70], [100, -70]]);
-    track(ins.head, "r", [[0, -6], [44, -6], [48, -20], [54, -20], [58, 6], [100, 6]]);
-    const beamT = el("path", { d: "M18 -40 L150 -84 L150 -4 Z", class: "sc-torch" }, ins.g);
-    track(beamT, "o", [[0, .55], [45, .55], [46, 0], [99, 0], [100, .55]]);
+    track(ins.bob, "y", merge(out.bob, [[35, 0], [88, 0]], back.bob));
+    track(ins.aR.up, "r", [[0, -150], [35, -150], [38, -150], [40, -10], [79, -10], [80, -150], [86, -150], [87, -160], [91, -160], [92, -10], [100, -150]]);
+    track(ins.aR.fore, "r", [[0, -20], [86, -20], [87, -40], [91, -40], [92, 0], [100, -20]]);
+    track(ins.aL.up, "r", merge([[0, 10], [40, 10], [41, 150]], wave(41, 48, 150, 175, 1.2), [[48, 10], [100, 10]]));
+    track(ins.head, "r", [[0, -10], [34, -10], [38, -20], [48, -20], [50, -8], [56, -16], [76, -16], [80, -20], [88, -20], [90, 0], [100, -10]]);
+    const beamT = el("path", { d: "M2 -66 L-40 -150 L50 -150 Z", class: "sc-torch" }, ins.g);
+    track(beamT, "o", [[0, .55], [38, .55], [39, 0], [79, 0], [80, .55], [86, .55], [87, 0], [99, 0], [100, .55]]);
   }
 
-  /* 03 CAREERS — new crew drops in: parachutes land, everyone walks on to the gate */
+  /* 03 CAREERS — hiring day: new crew drop in without helmets, walk up to the
+     recruiter, he checks them off and hands each a helmet, and only then do
+     they walk on through the gate. */
   {
-    const L = layer(3, 15), ink2 = inkG(L), cr = crewG(L);
-    el("path", { d: "M1350 400V306 M1410 400V306" }, ink2); // two legs under the sign, none through it
+    const T = 24;
+    const L = layer(3, T), ink2 = inkG(L), cr = crewG(L);
+    el("path", { d: "M1350 400V306 M1410 400V306" }, ink2);
     el("rect", { x: 1300, y: 262, width: 160, height: 44, class: "sc-sign" }, ink2);
     el("text", { x: 1380, y: 290, class: "sc-label sc-label--sign" }, ink2).textContent = "JOIN THE CREW";
+    el("path", { d: "M1490 400V300 M1570 400V300 M1484 300h92 M1490 320h80" }, ink2); // the gate
     const rec = person(1250, G, { cls: "sc-recruiter" }, cr);
     el("rect", { x: -6, y: 10, width: 12, height: 15, class: "sc-board" }, rec.aR.fore);
-    track(rec.aR.up, "r", [[0, -40], [100, -40]]); track(rec.aR.fore, "r", [[0, 70], [100, 70]]);
-    const wave = []; for (let t = 0; t < 100; t += 5) wave.push([t, t % 10 ? 150 : 175]);
-    track(rec.aL.up, "r", wave);
-    track(rec.head, "r", [[0, 10], [100, 10]]);
-    [[620, 0], [860, -5], [480, -10]].forEach(([lx, delay], j) => {
+    const held = el("path", { d: "M-7.5 18 A7.5 7.5 0 0 1 7.5 18 Z M-10 18 H10", class: "sc-helmet sc-held" }, rec.aL.fore);
+    // a beat per arrival: check off on the clipboard, then hold out a helmet
+    const beats = [62, 28.7, 95.3];
+    const bl = [], br = [], bh = [], bo = [];
+    beats.forEach((s) => {
+      [[0, 10], [3, 10], [5, 82], [9, 82], [10, 10]].forEach(([d, v]) => bl.push([(s + d) % 100, v]));
+      [[0, -40], [1, -40], [2, -60], [3, -40], [4, -60], [5, -40]].forEach(([d, v]) => br.push([(s + d) % 100, v]));
+      [[0, 10], [2, 10], [3, -12], [4, 10], [9, 10]].forEach(([d, v]) => bh.push([(s + d) % 100, v]));
+      [[0, 0], [4.9, 0], [5, 1], [9, 1], [9.1, 0]].forEach(([d, v]) => bo.push([(s + d) % 100, v]));
+    });
+    const tidy = (a, rest) => { const o = [...a].sort((x, y) => x[0] - y[0]); o.unshift([0, rest]); o.push([100, rest]); return o; };
+    track(rec.aL.up, "r", tidy(bl, 10)); track(rec.aL.fore, "r", [[0, 0], [100, 0]]);
+    track(rec.aR.up, "r", tidy(br, -40)); track(rec.aR.fore, "r", [[0, 70], [100, 70]]);
+    track(rec.head, "r", tidy(bh, 10));
+    track(held, "o", tidy(bo, 0));
+    [[620, 0], [860, -8], [480, -16]].forEach(([lx, delay], j) => {
       const opts = { delay };
       const drift = el("g", {}, cr);
-      // fall 0–40 % with a sway, land, then walk on past the gate and off the sheet
-      track(drift, "x", [[0, -40], [14, 30], [28, -20], [40, 0], [46, 0], [100, 1700 - lx]], { ...opts, lin: true });
+      track(drift, "x", [[0, -40], [12, 30], [24, -20], [36, 0], [40, 0], [62, 1200 - lx], [72, 1200 - lx], [100, 1720 - lx]], { ...opts, lin: true });
       const fall = el("g", {}, drift);
-      track(fall, "y", [[0, -420], [40, 0], [100, 0]], { ...opts, lin: true });
+      track(fall, "y", [[0, -420], [36, 0], [100, 0]], { ...opts, lin: true });
       const chute = el("g", { class: "sc-chute", transform: `translate(${lx} ${G})` }, fall);
       el("path", { d: "M-6 -50 L-36 -112 M6 -50 L36 -112 M0 -50 L0 -118" }, chute);
       el("path", { d: "M-40 -110 Q-40 -150 0 -152 Q40 -150 40 -110 Q30 -118 20 -110 Q10 -118 0 -110 Q-10 -118 -20 -110 Q-30 -118 -40 -110 Z", class: "sc-canopy" }, chute);
       el("path", { d: "M-10 -151 Q0 -152 10 -151 L8 -113 Q0 -118 -8 -113 Z", class: "sc-canopy__panel" }, chute);
-      track(chute, "o", [[0, 1], [40, 1], [44, 0], [99, 0], [100, 1]], opts);
+      track(chute, "o", [[0, 1], [36, 1], [41, 0], [99, 0], [100, 1]], opts);
       const m = person(lx, G, { cls: "sc-jumper" }, fall);
-      const walkOn = walk(48, 100, -1, j, true, 2.4);
+      track(m.head.lastChild, "o", [[0, 0], [67, 0], [68, 1], [99.5, 1], [100, 0]], opts); // no helmet until he is given one
+      const w1 = walk(40, 62, -1, j, true, 2.2), w2 = walk(72, 100, -1, j + 1, true, 2.2);
       ["L", "R"].forEach((S) => {
-        track(m[`l${S}`].th, "r", merge([[0, S === "L" ? 6 : -6], [39, S === "L" ? 6 : -6], [41, 28 * (S === "L" ? 1 : -1)], [44, 28 * (S === "L" ? 1 : -1)], [47, 0]], walkOn[`th${S}`]), opts);
-        track(m[`l${S}`].sh, "r", merge([[0, 0], [39, 0], [41, 50 * (S === "L" ? -1 : 1)], [44, 50 * (S === "L" ? -1 : 1)], [47, 0]], walkOn[`sh${S}`]), opts);
-        track(m[`a${S}`].up, "r", merge([[0, S === "L" ? 160 : -160], [40, S === "L" ? 160 : -160], [44, S === "L" ? 30 : -30], [47, S === "L" ? 8 : -8]], walkOn[`ua${S}`]), opts);
-        track(m[`a${S}`].fore, "r", merge([[0, 0], [47, 0]], walkOn[`fa${S}`]), opts);
+        const sg = S === "L" ? 1 : -1;
+        track(m[`l${S}`].th, "r", merge([[0, 6 * sg], [35, 6 * sg], [37, 28 * sg], [39, 28 * sg], [40, 0]], w1[`th${S}`], [[62, 0], [72, 0]], w2[`th${S}`]), opts);
+        track(m[`l${S}`].sh, "r", merge([[0, 0], [35, 0], [37, -50 * sg], [39, -50 * sg], [40, 0]], w1[`sh${S}`], [[62, 0], [72, 0]], w2[`sh${S}`]), opts);
+        track(m[`a${S}`].fore, "r", merge([[0, 0], [40, 0]], w1[`fa${S}`], [[62, 0], [72, 0]], w2[`fa${S}`]), opts);
       });
-      track(m.bob, "y", merge([[0, 0], [39, 0], [41, 8], [44, 8], [47, 0]], walkOn.bob), opts);
+      track(m.aL.up, "r", merge([[0, 160], [36, 160], [39, 30], [40, 8]], w1.uaL, [[62, 8], [72, 8]], w2.uaL), opts);
+      track(m.aR.up, "r", merge([[0, -160], [36, -160], [39, -30], [40, -8]], w1.uaR, [[62, -8], [65, -70], [67, -170], [68.5, -170], [70, -8], [72, -8]], w2.uaR), opts);
+      track(m.head, "r", [[0, 0], [62, 0], [64, -8], [70, -8], [72, 0], [100, 0]], opts);
+      track(m.bob, "y", merge([[0, 0], [35, 0], [37, 8], [39, 8], [40, 0]], w1.bob, [[62, 0], [72, 0]], w2.bob), opts);
     });
   }
 
-  /* 04 CONTACT — calling out: a megaphone, a wave, a call on the phone */
+  /* 04 CONTACT — the phone on the crate rings; he answers, listens, points
+     over to the man with the megaphone, who calls it out, and the third
+     waves you over; he hangs up and writes it down. */
   {
-    const L = layer(4, 8), ink2 = inkG(L), cr = crewG(L);
-    const mg = person(520, G, { cls: "sc-caller" }, cr);
-    track(mg.aR.up, "r", [[0, -100], [100, -100]]); track(mg.aR.fore, "r", [[0, -20], [100, -20]]);
-    el("path", { d: "M-3 11 L-3 20 L-12 30 L12 30 L3 20 L3 11 Z", class: "sc-megaphone" }, mg.aR.fore);
-    track(mg.aL.up, "r", [[0, 30], [100, 30]]); track(mg.aL.fore, "r", [[0, -90], [100, -90]]);
-    track(mg.head, "r", [[0, -8], [100, -8]]);
-    breathe(mg, 6);
-    [0, 1, 2].forEach((i) => el("path", { d: `M${560 + i * 18} ${G - 78} q12 14 0 28`, class: "sc-wave", style: `--d:${i * 0.25}s` }, L));
-    const wv = person(800, G, { cls: "sc-waver" }, cr);
-    const wL = [], wR = []; for (let t = 0; t < 100; t += 6.25) { const k = Math.round(t / 6.25) % 2; wL.push([t, k ? 118 : 140]); wR.push([t, k ? -140 : -118]); }
-    track(wv.aL.up, "r", wL); track(wv.aR.up, "r", wR);
-    track(wv.aL.fore, "r", wL.map(([t, v]) => [t, v > 130 ? 40 : 10])); track(wv.aR.fore, "r", wR.map(([t, v]) => [t, v < -130 ? -40 : -10]));
-    track(wv.bob, "y", (() => { const o = []; for (let t = 0; t < 100; t += 12.5) o.push([t, 0], [t + 6.25, -4]); return o; })());
-    // on a crate, on the phone
+    const L = layer(4, 16), ink2 = inkG(L), cr = crewG(L);
     el("rect", { x: 1060, y: 362, width: 60, height: 38 }, ink2);
     el("path", { d: "M1060 381h60 M1090 362v38", class: "sc-rib" }, ink2);
+    const cradleSet = el("rect", { x: 1102, y: 354, width: 14, height: 8, class: "sc-handset" }, L);
+    track(cradleSet, "o", [[0, 1], [14, 1], [14.5, 0], [84, 0], [84.5, 1], [100, 1]]);
+    track(cradleSet, "x", merge(wave(0, 12, -1.5, 1.5, 0.6), [[12, 0], [100, 0]]));
+    [0, 1, 2].forEach((i) => { const a = el("path", { d: `M${1124 + i * 7} ${348 - i * 3} q8 8 0 16`, class: "sc-ring" }, L); track(a, "o", merge([[0, 0]], ...[0, 3, 6, 9].map((s) => [[s + i * 0.6, 0], [s + i * 0.6 + 0.3, 1], [s + i * 0.6 + 1.6, 0]]), [[12, 0], [100, 0]])); });
     const ph = person(1090, 362 + 18, { cls: "sc-phone" }, cr);
     track(ph.lL.th, "r", [[0, -80], [100, -80]]); track(ph.lR.th, "r", [[0, -80], [100, -80]]);
     track(ph.lL.sh, "r", [[0, 80], [50, 95], [100, 80]]); track(ph.lR.sh, "r", [[0, 95], [50, 80], [100, 95]]);
-    track(ph.aR.up, "r", [[0, -150], [100, -150]]); track(ph.aR.fore, "r", [[0, -150], [100, -150]]);
-    el("rect", { x: -3, y: 6, width: 6, height: 11, class: "sc-handset" }, ph.aR.fore);
-    const talk = []; for (let t = 0; t < 100; t += 10) talk.push([t, 30], [t + 5, 60]);
-    track(ph.aL.up, "r", talk);
-    track(ph.head, "r", [[0, 8], [30, 8], [36, -6], [64, -6], [70, 8], [100, 8]]);
-    [0, 1, 2].forEach((i) => el("circle", { cx: 1112 + i * 9, cy: G - 92, r: 2.5, class: "sc-dot", style: `--d:${i * 0.2}s` }, L));
+    track(ph.aR.up, "r", [[0, -40], [12, -40], [14, -110], [16, -150], [80, -150], [83, -60], [86, -40], [100, -40]]);
+    track(ph.aR.fore, "r", [[0, 20], [12, 20], [16, -150], [80, -150], [84, 20], [100, 20]]);
+    const hand = el("rect", { x: -3, y: 6, width: 6, height: 11, class: "sc-handset" }, ph.aR.fore);
+    track(hand, "o", [[0, 0], [14.5, 0], [15, 1], [83.5, 1], [84, 0], [100, 0]]);
+    track(ph.aL.up, "r", merge([[0, 30], [38, 30], [40, 92], [50, 92], [52, 30]], wave(86, 98, 30, 44, 1.5), [[100, 30]]));
+    track(ph.aL.fore, "r", [[0, -40], [38, -40], [40, 0], [50, 0], [52, -40], [86, -60], [98, -60], [100, -40]]);
+    const note = el("rect", { x: 1104, y: 368, width: 12, height: 9, class: "sc-paper" }, L);
+    track(note, "o", [[0, 0], [86, 0], [87, 1], [99, 1], [100, 0]]);
+    track(ph.head, "r", [[0, 14], [12, 14], [16, 6], [38, 6], [40, -20], [50, -20], [52, 6], [84, 6], [86, 18], [100, 14]]);
+    [0, 1, 2].forEach((i) => { const d = el("circle", { cx: 1112 + i * 9, cy: G - 92, r: 2.5, class: "sc-dot2" }, L); track(d, "o", merge([[0, 0], [18, 0]], wave(18 + i * 0.4, 36, 0.2, 1, 1.2), [[36, 0], [100, 0]])); });
+    // the megaphone
+    const mg = person(520, G, { cls: "sc-caller" }, cr);
+    el("path", { d: "M-3 11 L-3 20 L-12 30 L12 30 L3 20 L3 11 Z", class: "sc-megaphone" }, mg.aR.fore);
+    track(mg.aR.up, "r", [[0, -30], [46, -30], [50, -100], [76, -100], [80, -30], [100, -30]]);
+    track(mg.aR.fore, "r", [[0, 40], [46, 40], [50, -20], [76, -20], [80, 40], [100, 40]]);
+    track(mg.aL.up, "r", [[0, 10], [100, 10]]);
+    track(mg.head, "r", [[0, 0], [38, 0], [41, 18], [46, 18], [49, -8], [76, -8], [80, 0], [100, 0]]);
+    breathe(mg, 6);
+    [0, 1, 2].forEach((i) => { const a = el("path", { d: `M${560 + i * 18} ${G - 78} q12 14 0 28`, class: "sc-wave2" }, L); track(a, "o", merge([[0, 0], [50, 0]], ...[0, 1, 2, 3, 4, 5, 6, 7].map((k) => [[51 + k * 3 + i, 0], [51.6 + k * 3 + i, 1], [53 + k * 3 + i, 0]]), [[77, 0], [100, 0]])); });
+    // the waver
+    const wv = person(800, G, { cls: "sc-waver" }, cr);
+    const wL = merge([[0, 8], [55, 8]], wave(56, 80, 118, 140, 2), [[82, 8], [100, 8]]), wR = merge([[0, -8], [55, -8]], wave(56, 80, -140, -118, 2), [[82, -8], [100, -8]]);
+    track(wv.aL.up, "r", wL); track(wv.aR.up, "r", wR);
+    track(wv.aL.fore, "r", wL.map(([t, v]) => [t, v > 130 ? 40 : v > 100 ? 10 : 0])); track(wv.aR.fore, "r", wR.map(([t, v]) => [t, v < -130 ? -40 : v < -100 ? -10 : 0]));
+    track(wv.bob, "y", merge([[0, 0], [55, 0]], wave(56, 80, 0, -4, 2), [[82, 0], [100, 0]]));
+    track(wv.head, "r", [[0, 0], [48, 0], [52, -14], [56, 0], [100, 0]]);
   }
 
-  /* 05 THE END — lunch on the beam */
+  /* 05 THE END — lunch on the beam; a bird lands for the crumbs, everyone
+     turns to look, one points, it is off with a crust; a cup of coffee is
+     passed down the line. */
   {
-    const L = layer(5, 10), ink2 = inkG(L), cr = crewG(L);
+    const L = layer(5, 20), ink2 = inkG(L), cr = crewG(L);
     const by2 = 330;
     el("path", { d: `M360 ${by2}H1240 M360 ${by2 + 12}H1240 M360 ${by2}v12 M1240 ${by2}v12` }, ink2);
     [420, 1180].forEach((x) => el("path", { d: `M${x - 30} ${G}L${x} ${by2 + 12}L${x + 30} ${G} M${x - 18} ${G - 24}h36` }, ink2));
-    const xs = [500, 640, 780, 920, 1060];
+    const xs = [500, 640, 780, 920, 1060], men = [];
     xs.forEach((x, i) => {
       const s = person(x, by2 + 25, { cls: "sc-luncher" }, cr);
-      // seated, side-on: thighs along the beam, shins hanging and swinging
+      men.push(s);
       const sw = []; for (let t = 0; t < 100; t += 12.5) sw.push([t, 0], [t + 6.25, 24]);
       track(s.lL.th, "r", [[0, -84], [100, -84]]); track(s.lR.th, "r", [[0, -78], [100, -78]]);
       track(s.lL.sh, "r", sw.map(([t, v]) => [((t + i * 3) % 100), 84 + v]).sort((a, b) => a[0] - b[0]));
       track(s.lR.sh, "r", sw.map(([t, v]) => [((t + i * 3 + 6) % 100), 78 + 24 - v]).sort((a, b) => a[0] - b[0]));
       breathe(s, 5);
-      if (i === 0) { // sandwich
-        el("rect", { x: -5, y: 9, width: 10, height: 5, class: "sc-food" }, s.aR.fore);
-        track(s.aR.up, "r", [[0, -30], [30, -30], [36, -150], [48, -150], [54, -30], [100, -30]]);
-        track(s.aR.fore, "r", [[0, 0], [30, 0], [36, -150], [48, -150], [54, 0], [100, 0]]);
-      } else if (i === 1) { // a cup of coffee
-        el("rect", { x: -4, y: 12, width: 8, height: 9, class: "sc-food" }, s.aL.fore);
-        track(s.aL.up, "r", [[0, 30], [60, 30], [66, 150], [80, 150], [86, 30], [100, 30]]);
-        track(s.aL.fore, "r", [[0, 0], [60, 0], [66, 150], [80, 150], [86, 0], [100, 0]]);
-      } else if (i === 2) { // the paper
-        const paper = el("rect", { x: -22, y: -54, width: 44, height: 26, class: "sc-paper" }, s.bob);
-        track(s.aL.up, "r", [[0, 60], [100, 60]]); track(s.aR.up, "r", [[0, -60], [100, -60]]);
-        track(s.aL.fore, "r", [[0, 90], [100, 90]]); track(s.aR.fore, "r", [[0, -90], [100, -90]]);
-        track(paper, "y", [[0, 0], [48, 0], [50, -3], [52, 0], [100, 0]]);
-        track(s.head, "r", [[0, 0], [70, 0], [74, 14], [82, 14], [86, 0], [100, 0]]);
-      } else if (i === 3) { // pointing out across the yard
-        track(s.aR.up, "r", [[0, -10], [40, -10], [46, -100], [70, -100], [76, -10], [100, -10]]);
-        track(s.head, "r", [[0, 0], [40, 0], [46, -14], [70, -14], [76, 0], [100, 0]]);
-      } else { // looking where he points
-        track(s.head, "r", [[0, 0], [44, 0], [50, -14], [72, -14], [78, 0], [100, 0]]);
-        track(s.aL.up, "r", [[0, 40], [100, 40]]); track(s.aL.fore, "r", [[0, -70], [100, -70]]);
-      }
+      // all turn to the bird while it is on the beam (it lands at 850)
+      const look = x < 850 ? -16 : 16;
+      if (i !== 2) track(s.head, "r", [[0, 0], [30, 0], [33, look], [56, look], [60, 0], [100, 0]]);
     });
-    [570, 850].forEach((x) => el("rect", { x, y: by2 - 10, width: 16, height: 10, class: "sc-ink-line" }, ink2));
+    // 0: the sandwich, bitten into
+    el("rect", { x: -5, y: 9, width: 10, height: 5, class: "sc-food" }, men[0].aR.fore);
+    track(men[0].aR.up, "r", [[0, -30], [8, -30], [12, -150], [18, -150], [22, -30], [64, -30], [68, -150], [74, -150], [78, -30], [100, -30]]);
+    track(men[0].aR.fore, "r", [[0, 0], [8, 0], [12, -150], [18, -150], [22, 0], [64, 0], [68, -150], [74, -150], [78, 0], [100, 0]]);
+    // 1: the coffee, handed down the line to 2 at the end
+    const cup = el("rect", { x: 646, y: 300, width: 8, height: 9, class: "sc-food" }, L);
+    track(cup, "x", [[0, 0], [78, 0], [86, 132], [96, 132], [98, 0], [100, 0]]);
+    track(cup, "o", [[0, 1], [96, 1], [97, 0], [99, 0], [100, 1]]);
+    track(men[1].aL.up, "r", [[0, 40], [76, 40], [80, -80], [86, -80], [90, 40], [100, 40]]);
+    track(men[2].aR.up, "r", [[0, -10], [84, -10], [86, 60], [90, 60], [92, -150], [96, -150], [98, -10], [100, -10]]);
+    track(men[2].aR.fore, "r", [[0, 0], [90, 0], [92, -150], [96, -150], [98, 0], [100, 0]]);
+    // 2: the paper, lowered to look at the bird
+    const paper = el("rect", { x: -22, y: -54, width: 44, height: 26, class: "sc-paper" }, men[2].bob);
+    track(paper, "y", [[0, 0], [33, 0], [36, 16], [56, 16], [60, 0], [100, 0]]);
+    track(men[2].head, "r", [[0, 0], [33, 0], [36, 16], [56, 16], [60, 0], [100, 0]]);
+    // 3: points at it
+    track(men[3].aR.up, "r", [[0, -10], [38, -10], [42, 80], [54, 80], [58, -10], [100, -10]]);
+    // the bird: in from the right, lands, pecks, off to the left with a crust
+    const bird = el("g", { class: "sc-bird" }, L);
+    el("path", { d: "M-9 -4 Q-4 -10 0 -4 Q4 -10 9 -4 M-3 -3 Q0 0 3 -3", class: "sc-bird__wing" }, bird);
+    const bx = el("g", {}, L), byg = el("g", {}, bx); byg.append(bird);
+    track(bx, "x", [[0, 1700], [24, 1700], [32, 850], [56, 850], [66, 100], [100, 100]]);
+    track(byg, "y", [[0, 170], [24, 170], [32, by2 - 2], [56, by2 - 2], [66, 120], [100, 120]]);
+    track(bird, "r", merge([[0, 0], [33, 0]], wave(34, 54, 0, 24, 2.5), [[56, 0], [100, 0]]));
+    track(bx, "o", [[0, 0], [23.5, 0], [24, 1], [66, 1], [66.5, 0], [100, 0]]);
+    const crumb = el("rect", { x: 846, y: by2 - 3, width: 4, height: 3, class: "sc-food" }, L);
+    track(crumb, "o", [[0, 1], [55, 1], [56, 0], [99, 0], [100, 1]]);
   }
 
   /* show the layer for the section in view; the others pause */
