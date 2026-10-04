@@ -858,3 +858,21 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 @media (hover: hover) and (pointer: fine) { .sc-aldy__link:hover .sc-aldy__board { fill: var(--accent); } .sc-aldy__link:hover :is(.sc-aldy__t, .sc-aldy__s, .sc-aldy__mark) { fill: #fff; } }
 .sc-aldy { transition: transform .7s cubic-bezier(0.34, 1.4, 0.64, 1), opacity .3s; }
 .is-awaiting .sc-aldy { transform: translateY(40px); opacity: 0; }
+
+/* the cast: four regulars, drawing mode only */
+.sc-cast { display: none; }
+[data-mode="drawing"] .sc-cast { display: inline; }
+.sc-boss .sc-helmet { fill: var(--pp); stroke: var(--ik); stroke-width: 1.2; }
+.sc-belly { fill: var(--accent); stroke: none; }
+.sc-mug, .sc-box, .sc-crate, .sc-plane { fill: var(--pp); stroke: var(--ik); stroke-width: 1; stroke-linejoin: round; }
+.sc-stache { fill: none; stroke: var(--ik); stroke-width: 1.6; stroke-linecap: round; }
+.sc-phones { fill: var(--ik); stroke: var(--ik); stroke-width: 1.2; }
+.sc-phones__band { fill: none; stroke-width: 1.8; }
+.sc-broom { fill: none; stroke: var(--ik); stroke-width: 2; stroke-linecap: round; }
+.sc-reel { fill: var(--ik); stroke: none; }
+.sc-tape { fill: var(--ik); stroke: none; }
+.sc-hel { stroke-width: 1.5; }
+.sc-bub rect, .sc-bub__tail { fill: var(--pp); stroke: var(--ik); stroke-width: 1; }
+.sc-bub text { fill: var(--ik); stroke: none; font: 700 10px var(--f-text); letter-spacing: .06em; text-anchor: middle; }
+.sc-zz, .sc-note { fill: var(--ik); stroke: none; font: 700 11px var(--f-text); }
+.sc-note { fill: var(--accent); font-size: 13px; }

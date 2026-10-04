@@ -126,7 +126,7 @@
   let uid = 0;
   const track = (node, kind, frames, opts = {}) => {
     const name = `sc-k${uid++}`;
-    const fmt = kind === "r" ? (v) => `transform: rotate(${v}deg)` : kind === "y" ? (v) => `transform: translateY(${v}px)` : kind === "x" ? (v) => `transform: translateX(${v}px)` : (v) => `opacity: ${v}`;
+    const fmt = kind === "r" ? (v) => `transform: rotate(${v}deg)` : kind === "y" ? (v) => `transform: translateY(${v}px)` : kind === "x" ? (v) => `transform: translateX(${v}px)` : kind === "sx" ? (v) => `transform: scaleX(${v})` : (v) => `opacity: ${v}`;
     const tf = opts.lin ? "linear" : "cubic-bezier(0.45, 0, 0.55, 1)";
     const seen = new Map();
     frames.forEach(([p, v]) => seen.set(Math.max(0, Math.min(100, +p.toFixed(2))), v));
@@ -602,6 +602,387 @@
   /* phones: no room for the whole yard, so each screen gets a close-up —
      a camera on one worker (and whoever is beside him). x is where he
      stands, h how much height the shot takes in. */
+  /* ── the cast: drawing mode only ─────────────────────────────────────
+     Four regulars who turn up on every screen, each on a long loop of his
+     own: the FOREMAN (white helmet, a mug, a watch, a secret dancer), the
+     OLD HAND (a moustache, a stoop, naps, always right), the ROOKIE (too big
+     a helmet, runs everywhere, drops things) and the one with HEADPHONES.
+     Scripted in seconds; hands are placed by target (ik), not by angle. */
+  const castOf = (step, T) => el("g", { class: "sc-cast sc-crew", style: `--T:${T}s` }, svg.querySelector(`.sc-layer[data-for="${step}"]`));
+  const at = (T, pairs) => pairs.map(([t, v]) => [(t / T) * 100, v]);
+  const tk = (node, kind, T, pairs, opts) => track(node, kind, at(T, pairs), opts);
+  // a hand to (hx, hy), feet at 0 0, shoulder at 0 -48, both bones 11
+  const ik = (side, hx, hy, elbow = "down") => {
+    let dx = hx, dy = hy + 48, d = Math.hypot(dx, dy) || 1;
+    if (d > 21.8) { dx *= 21.8 / d; dy *= 21.8 / d; d = 21.8; }
+    const h = Math.sqrt(Math.max(0, 121 - (d / 2) ** 2)), px = -dy / d, py = dx / d;
+    const e1 = [dx / 2 + px * h, dy / 2 + py * h], e2 = [dx / 2 - px * h, dy / 2 - py * h];
+    const first = elbow === "down" ? e1[1] >= e2[1] : elbow === "up" ? e1[1] <= e2[1] : elbow === "out" ? Math.abs(e1[0]) >= Math.abs(e2[0]) : Math.abs(e1[0]) <= Math.abs(e2[0]);
+    const [ex, ey] = first ? e1 : e2;
+    const ang = (vx, vy) => Math.atan2(-vx, vy) * 180 / Math.PI;
+    const wrap = (v, lo) => { while (v <= lo) v += 360; while (v > lo + 360) v -= 360; return Math.round(v * 10) / 10; };
+    const a1 = ang(ex, ey);
+    return [wrap(a1, side === "R" ? -260 : -100), wrap(ang(dx - ex, dy - ey) - a1, -180)];
+  };
+  const REST = { x: 0, y: 0, r: 0, sx: 1, head: 0, bob: 0, thL: 0, shL: 0, thR: 0, shR: 0, uaL: 8, faL: 0, uaR: -8, faR: 0 };
+  const SIT = { bob: 11, thL: -84, shL: 84, thR: -78, shR: 78 };
+  const STAND = { bob: 0, thL: 0, shL: 0, thR: 0, shR: 0 };
+  const SQUAT = { bob: 11, thL: 45, thR: -45, shL: -90, shR: 90 };
+  const THUMB = { uaR: -150, faR: 30 };
+  const ARMS = { uaL: 8, faL: 0, uaR: -8, faR: 0 };
+
+  const actor = (C, T, x0, { s = 1, cls = "", base = {} } = {}) => {
+    const place = el("g", { transform: `translate(${x0} ${G}) scale(${s})` }, C);
+    const mv = el("g", {}, place), hop = el("g", {}, mv), tip = el("g", {}, hop), flip = el("g", {}, tip);
+    const m = person(0, 0, { cls: `sc-cast__man ${cls}` }, flip);
+    const ch = {};
+    let cx = x0;
+    const expand = (p) => {
+      const o = { ...p };
+      if (o.hL) { [o.uaL, o.faL] = ik("L", ...o.hL); delete o.hL; }
+      if (o.hR) { [o.uaR, o.faR] = ik("R", ...o.hR); delete o.hR; }
+      return o;
+    };
+    const B = { ...REST, x: x0, ...expand(base) };
+    const valAt = (k, t) => { let v = B[k], best = -1; (ch[k] || []).forEach(([kt, kv]) => { if (kt <= t && kt >= best) { best = kt; v = kv; } }); return v; };
+    const a = {
+      m, mv, hop, tip, flip, s, T, B,
+      k(t, pose) { const p = expand(pose); for (const n in p) (ch[n] ||= []).push([t, p[n]]); if ("x" in p) cx = p.x; return a; },
+      hold(t0, t1, pose) { a.k(t0, pose); return a.k(t1, pose); },
+      // base pose back on the listed channels (all but x and y when none listed)
+      rest(t, keys) { const p = {}; (keys || Object.keys(REST).filter((n) => n !== "x")).forEach((n) => { p[n] = B[n]; }); return a.k(t, p); },
+      // channel n swings ±amp about where it is at t0, every period seconds
+      wag(t0, t1, n, amp, period = 0.3) { const v = valAt(n, t0); let i = 0; for (let t = t0; t < t1 - period / 2; t += period, i++) (ch[n] ||= []).push([t, v + (i % 2 ? -amp : amp)]); (ch[n] ||= []).push([t1, v]); return a; },
+      walk(t0, t1, x1, { stride = 0.22, arms = "LR", big = 1 } = {}) {
+        const dir = x1 > cx ? -1 : 1, P = (t) => (t / T) * 100;
+        const w = walk(P(t0), P(t1), dir, 0, arms !== "", P(stride) - P(0));
+        // a walk starts from standing, arms hanging, whatever his resting pose
+        ["thL", "shL", "thR", "shR", "bob"].forEach((n) => { (ch[n] ||= []).push([t0 - 0.06, REST[n]]); w[n].forEach(([p, v]) => ch[n].push([(p * T) / 100, v * big])); });
+        [["L", "uaL", "faL"], ["R", "uaR", "faR"]].forEach(([S, u, f]) => {
+          if (!arms.includes(S)) return;
+          (ch[u] ||= []).push([t0 - 0.06, REST[u]]); (ch[f] ||= []).push([t0 - 0.06, 0]);
+          w[u].forEach(([p, v]) => ch[u].push([(p * T) / 100, REST[u] + (v - REST[u]) * big]));
+          w[f].forEach(([p, v]) => ch[f].push([(p * T) / 100, v * big]));
+        });
+        a.k(t0, { x: cx }); return a.k(t1, { x: x1 });
+      },
+      run(t0, t1, x1, o = {}) { return a.walk(t0, t1, x1, { stride: 0.13, big: 1.5, ...o }); },
+      // a speech balloon above his head; it follows him but keeps its size
+      say(text, t0, t1, { dy = -80 } = {}) {
+        const g = el("g", { class: "sc-bub", transform: `translate(0 ${dy}) scale(${1 / s})` }, mv);
+        const w = text.length * 6.4 + 12;
+        el("path", { d: "M-3 5 L0 10 L3 5", class: "sc-bub__tail" }, g);
+        el("rect", { x: -w / 2, y: -11, width: w, height: 16, rx: 3 }, g);
+        el("text", { x: 0, y: 1 }, g).textContent = text;
+        tk(g, "o", T, [[0, 0], [t0 - 0.02, 0], [t0 + 0.12, 1], [t1 - 0.12, 1], [t1, 0], [T, 0]]);
+        return a;
+      },
+      // small rising glyphs: z for a nap, notes for the music
+      float(glyph, t0, t1, { dx = 8, dy = -70, cls = "sc-zz" } = {}) {
+        [0, 1, 2].forEach((i) => {
+          const g = el("g", { transform: `translate(${dx + i * 5} ${dy}) scale(${1 / s})` }, mv);
+          const n = el("text", { x: 0, y: 0, class: cls }, g);
+          n.textContent = glyph;
+          const ys = [[0, 0]], os = [[0, 0]];
+          for (let t = t0 + i * 0.45; t + 1.1 < t1; t += 1.35) { ys.push([t, 0], [t + 1.1, -14], [t + 1.14, 0]); os.push([t - 0.02, 0], [t + 0.1, 1], [t + 0.8, 1], [t + 1.1, 0]); }
+          ys.push([T, 0]); os.push([T, 0]);
+          tk(n, "y", T, ys); tk(g, "o", T, os);
+        });
+        return a;
+      },
+      done() {
+        const map = { x: [mv, "x"], y: [hop, "y"], r: [tip, "r"], sx: [flip, "sx"], head: [m.head, "r"], bob: [m.bob, "y"], uaL: [m.aL.up, "r"], faL: [m.aL.fore, "r"], uaR: [m.aR.up, "r"], faR: [m.aR.fore, "r"], thL: [m.lL.th, "r"], shL: [m.lL.sh, "r"], thR: [m.lR.th, "r"], shR: [m.lR.sh, "r"] };
+        Object.keys(map).forEach((n) => {
+          let fr = ch[n];
+          if (!fr && B[n] === REST[n] && n !== "x") return;
+          fr = fr ? [...fr] : [];
+          if (!fr.some(([t]) => t <= 0)) fr.push([0, B[n]]);
+          if (n === "x") fr = fr.map(([t, v]) => [t, (v - x0) / s]);
+          fr = fr.filter(([t]) => t >= 0 && t <= T);
+          const [node, kind] = map[n];
+          tk(node, kind, T, fr, n === "x" ? { lin: true } : {});
+        });
+      },
+    };
+    return a;
+  };
+  const foreman = (C, T, x) => {
+    const a = actor(C, T, x, { s: 1.08, cls: "sc-boss", base: { hL: [6, -38] } });
+    a.m.bob.insertBefore(el("ellipse", { cx: 1.5, cy: -33, rx: 8.5, ry: 9, class: "sc-belly" }), a.m.bob.querySelector(".sc-band"));
+    el("rect", { x: -3, y: 9, width: 7, height: 7, rx: 1, class: "sc-mug" }, a.m.aL.fore);
+    return a;
+  };
+  const oldHand = (C, T, x, base = {}) => {
+    const a = actor(C, T, x, { cls: "sc-old", base: { r: 3, ...base } });
+    el("path", { d: "M-4.5 -3.5 q2.2 1.8 4.5 0 q2.3 1.8 4.5 0", class: "sc-stache" }, a.m.head);
+    return a;
+  };
+  const rookie = (C, T, x, base = {}) => {
+    const a = actor(C, T, x, { s: 0.86, cls: "sc-kid", base });
+    const hm = a.m.head.querySelector(".sc-helmet");
+    a.hg = el("g", {}, a.m.head); a.hg.append(hm); // too big a helmet, in a group of its own: it slips
+    hm.setAttribute("transform", "translate(0 1) scale(1.22 1.15)");
+    return a;
+  };
+  const headphones = (C, T, x, base = {}) => {
+    const a = actor(C, T, x, { s: 0.96, cls: "sc-dj", base });
+    el("path", { d: "M-8.5 -8 A9 9 0 0 1 8.5 -8", class: "sc-phones sc-phones__band" }, a.m.head);
+    el("rect", { x: -10, y: -11, width: 3.5, height: 7, rx: 1, class: "sc-phones" }, a.m.head);
+    el("rect", { x: 6.5, y: -11, width: 3.5, height: 7, rx: 1, class: "sc-phones" }, a.m.head);
+    return a;
+  };
+  const chain = (parent, kinds) => { let g = parent; const o = {}; kinds.forEach((k) => { g = el("g", {}, g); o[k] = g; }); return o; };
+
+  /* 00 the yard — "lift with your knees": the rookie runs in with too many
+     boxes and drops one; the old hand wakes, shows him how, and puts it
+     back; the foreman, on time to the minute, sends him on; a nap resumes */
+  {
+    const T = 60, C = castOf(0, T);
+    el("rect", { x: 1514, y: 386, width: 32, height: 14, class: "sc-crate" }, C);
+    const old = oldHand(C, T, 1530, { ...SIT, head: 18, hL: [5, -27], hR: [7, -27] });
+    const kid = rookie(C, T, 1700, { hL: [8, -36], hR: [20, -36] });
+    const boss = foreman(C, T, 1700);
+    // the boxes, held at the chest; the top one has a life of its own
+    const piv = el("g", { transform: "translate(14 -30)" }, kid.mv), wob = el("g", {}, piv);
+    [-12, -22].forEach((y) => el("rect", { x: -6, y, width: 12, height: 10, class: "sc-box" }, wob));
+    const top = chain(el("g", { transform: "translate(0 -27)" }, wob), ["x", "y", "r"]);
+    el("rect", { x: -6, y: -5, width: 12, height: 10, class: "sc-box" }, top.r);
+    tk(top.x, "x", T, [[0, 0], [9, 0], [9.35, 8], [9.9, 25.5], [24.2, 25.5], [25.6, 26.7], [26.6, 3.4], [27.6, 0], [T, 0]]);
+    tk(top.y, "y", T, [[0, 0], [9, 0], [9.35, -6], [9.9, 52], [10.1, 48], [10.3, 52], [24.2, 52], [25.6, 17.5], [26.6, 17.5], [27.6, 0], [T, 0]]);
+    tk(top.r, "r", T, [[0, 0], [9, 0], [9.35, 30], [9.9, 90], [24.2, 90], [25.6, 0], [T, 0]]);
+    tk(wob, "r", T, [[0, 0], [6, 0], [6.4, 4], [6.9, -5], [7.4, 6], [7.9, -7], [8.4, 8], [9, 0], [38.6, 0], [38.9, -6], [39.3, 5], [39.7, 0], [T, 0]]);
+
+    kid.run(2, 6, 1470, { arms: "" });
+    kid.k(6, { r: 0 }).wag(6.2, 9, "r", 3, 0.5);
+    kid.say("!", 9.1, 10.6).k(9.4, { head: 0 }).hold(9.8, 11, { head: 20 }).k(11.4, { head: -10 }).say("HELP?", 11.3, 13.2).k(13.4, { head: 0 });
+    kid.wag(20.6, 22.8, "head", 8, 0.45).wag(28.6, 30.4, "head", 8, 0.4).say("THANKS!", 31.2, 33);
+    kid.k(38.5, { y: 0 }).k(38.8, { y: -8 }).k(39.2, { y: 0 }).say("!", 38.7, 40);
+    kid.run(42.4, 46, 1720, { arms: "" });
+
+    old.float("z", 0, 12).k(12, { head: 18 }).k(12.6, { head: -6 }).say("?", 12.4, 13.8);
+    old.k(13.8, { ...SIT, hL: [5, -27], hR: [7, -27] }).k(16.4, { ...STAND, hL: [-7, -30, "out"], r: 6, head: 0 }).say("UGH", 14.6, 16.4);
+    old.walk(16.8, 18.6, 1520, { stride: 0.34, arms: "R" });
+    old.k(19.6, { hL: [-7, -30, "out"] }).k(20.4, { hL: [-18, -40], hR: [7, -30, "out"], r: 3 }).wag(20.6, 22.4, "faL", 16, 0.3).say("KNEES!", 20.6, 22.8);
+    old.k(22.8, { ...STAND, hR: [-8, -30], hL: [-6, -30] }).k(24.2, { ...SQUAT, hR: [-14, -12], hL: [-10, -12], r: 6 });
+    old.k(25.6, { ...STAND, hR: [-15, -34], hL: [-11, -34], r: 3 });
+    old.walk(25.6, 26.6, 1500, { arms: "", stride: 0.25 });
+    old.k(26.6, { hR: [-15, -34], hL: [-11, -34] }).k(27.6, { hR: [-18, -48], hL: [-14, -48] });
+    old.k(28.4, { hL: [-7, -30, "out"], uaR: -8, faR: 0 }).hold(29, 30.4, THUMB).k(30.8, { uaR: -8, faR: 0 }).say("SEE?", 29, 31);
+    old.walk(31, 34.4, 1530, { stride: 0.34, arms: "R" });
+    old.k(34.6, { ...STAND, r: 3, head: 0, hL: [-7, -30, "out"] }).k(36.4, { ...SIT, head: 18, hL: [5, -27], hR: [7, -27], r: 3 });
+    old.float("z", 37, 60).k(53, { hR: [7, -27] }).hold(53.6, 55, THUMB).k(55.6, { hR: [7, -27] });
+
+    boss.walk(32, 36, 1568, { arms: "R" });
+    boss.k(36.2, { hR: [-4, -44, "out"], head: 16 }).k(38.6, { hR: [-4, -44, "out"], head: 16 }).say("08:00!", 36.8, 39);
+    boss.hold(39.4, 41.8, { hR: [22, -52], head: 0 }).k(42.4, { uaR: -8, faR: 0 }).say("GO GO GO", 40, 42.2);
+    boss.hold(46, 47.6, { head: -14 }).k(48.6, { hL: [3, -57], head: -8 }).k(49.6, { hL: [3, -57], head: -8 }).k(50.2, { hL: [6, -38], head: 0 });
+    boss.wag(50.4, 52.4, "head", 10, 0.35).say("…", 50.4, 52.6);
+    boss.walk(53, 58.5, 1720, { arms: "R" });
+    [old, kid, boss].forEach((a) => a.done());
+  }
+
+  /* 01 services — the one with the headphones sweeps to his own music and
+     plays the broom; the foreman catches him, then, when no one is looking,
+     dances too; caught in turn, he clears his throat and goes */
+  {
+    const T = 56, C = castOf(1, T);
+    const dj = headphones(C, T, 960, { hR: [10, -30], hL: [4, -38] });
+    el("path", { d: "M0 9 L-6 40 M-12 40 h12", class: "sc-broom" }, dj.m.aR.fore);
+    const boss = foreman(C, T, 1720);
+    const sweep = (a, t0, t1, p = 0.5, wide = 5) => { for (let t = t0, i = 0; t < t1 - p / 2; t += p, i++) a.k(t, { hR: [i % 2 ? 10 + wide : 10 - wide, -30] }); return a.k(t1, { hR: [10, -30] }); };
+    const groove = (a, t0, t1, p = 0.5) => a.wag(t0, t1, "head", 7, p).wag(t0, t1, "bob", 1.2, p);
+    const guitar = (a, t0, t1) => { a.k(t0, { hR: [8, -40], hL: [-14, -52], r: -4 }); a.wag(t0 + 0.2, t1 - 0.2, "faR", 18, 0.18).wag(t0 + 0.2, t1 - 0.2, "r", 4, 0.5); return a.k(t1, { hR: [10, -30], hL: [4, -38], r: 0 }); };
+
+    dj.walk(0.2, 12, 1060, { stride: 0.32, arms: "" }); sweep(dj, 0.2, 12); dj.wag(0, 12, "head", 7, 0.5).float("♪", 0, 15, { cls: "sc-note" });
+    guitar(dj, 12.2, 15.4);
+    sweep(dj, 15.6, 19.4); groove(dj, 15.6, 22);
+    dj.k(19.5, { sx: 1 }).k(19.9, { sx: -1 }).k(20.3, { sx: 1 });
+    dj.k(22.3, { y: 0 }).k(22.6, { y: -7 }).k(23, { y: 0 }).say("!", 22.5, 24);
+    sweep(dj, 24, 28, 0.15, 7); dj.hold(24, 28, { head: 14 });
+    sweep(dj, 28.2, 33); dj.k(33.2, { head: -16 }).say("?!", 33.4, 34.8);
+    guitar(dj, 35, 40).float("♪", 35, 40.2, { cls: "sc-note" });
+    dj.hold(40.6, 44.6, { head: 10 }).wag(43.2, 44.6, "head", 6, 0.35);
+    dj.walk(45, 51, 960, { stride: 0.32, arms: "" }); sweep(dj, 45, 51); dj.wag(45, 56, "head", 7, 0.5).wag(51.2, 56, "bob", 1.2, 0.5).float("♪", 46, 56, { cls: "sc-note" });
+    dj.hold(51.4, 52.8, THUMB); sweep(dj, 53, 56);
+
+    boss.walk(14, 19, 1290, { arms: "R" });
+    boss.k(19.4, { hR: [9, -29, "out"], head: 8 }).k(26, { hR: [9, -29, "out"], head: 8 }).say("…", 19.6, 22).wag(26, 27.6, "head", 9, 0.4);
+    boss.k(28.2, { hL: [3, -57], head: -8 }).k(29.2, { hL: [3, -57] }).k(29.8, { hL: [6, -38], head: -18, uaR: -8, faR: 0 });
+    boss.wag(30.4, 35, "thR", 14, 0.35).wag(30.4, 40, "bob", 1.5, 0.35).wag(30.4, 40, "head", 6, 0.35).float("♪", 31, 40, { cls: "sc-note" });
+    boss.k(35, { hR: [8, -56] }).wag(35.2, 40, "uaR", 14, 0.35);
+    boss.k(40.4, { ...STAND, uaR: -8, faR: 0, head: 0, r: 0 }).say("AHEM", 40.6, 42.6);
+    boss.hold(43, 45, { hR: [-22, -34] }).k(45.4, { uaR: -8, faR: 0 });
+    boss.walk(46, 51.5, 1720, { arms: "R" });
+    [dj, boss].forEach((a) => a.done());
+  }
+
+  /* 02 projects — measuring up: the rookie holds the tape, the old hand
+     walks it out; the rookie lets go, twice; a helmet over the eyes, a
+     stand walked into, a helmet put right, and a handshake */
+  {
+    const T = 60, C = castOf(2, T);
+    const kid = rookie(C, T, 1340, { hR: [10, -34] });
+    const old = oldHand(C, T, 1365, { hL: [-10, -29] });
+    el("circle", { cx: 0, cy: 12, r: 3, class: "sc-reel" }, old.m.aL.fore);
+    const X0 = 1348.6, len = (ox) => Math.max(0.01, ox - 10 - X0);
+    const tape = chain(el("g", { transform: `translate(${X0} 370.6)` }, C), ["o", "x", "sx"]);
+    el("rect", { x: 0, y: -0.6, width: 1, height: 1.2, class: "sc-tape" }, tape.sx);
+    tk(tape.x, "x", T, [[0, 0], [12.2, 0], [12.5, 186.4], [24.4, 186.4], [24.6, 0], [35.2, 0], [35.5, 186.4], [58.6, 186.4], [58.8, 0], [T, 0]], { lin: true });
+    tk(tape.sx, "sx", T, [[0, len(1365)], [2, len(1365)], [9, len(1545)], [12.2, len(1545)], [12.5, 0.01], [24.6, len(1372)], [24.8, len(1372)], [31.8, len(1545)], [35.2, len(1545)], [35.5, 0.01], [58.8, len(1365)], [T, len(1365)]], { lin: true });
+    tk(tape.o, "o", T, [[0, 1], [12.5, 1], [12.6, 0], [24.5, 0], [24.6, 1], [35.5, 1], [35.6, 0], [58.7, 0], [58.8, 1], [T, 1]]);
+
+    old.walk(2, 9, 1545, { stride: 0.3, arms: "R" });
+    old.hold(9.2, 12, { head: 20 }).say("HM…", 9.4, 11.6);
+    old.k(12.2, { r: 3, y: 0 }).k(12.45, { r: -10, y: -5 }).k(13, { r: 3, y: 0, head: 0 }).say("!!", 12.5, 14);
+    old.walk(14.2, 18.4, 1372, { stride: 0.2, arms: "R" });
+    old.k(19, { hR: [16, -58] }).wag(19.2, 22.6, "faR", 20, 0.3).k(23, { uaR: -8, faR: 0 }).say("HOLD IT!", 19.4, 22);
+    old.walk(24.8, 31.8, 1545, { stride: 0.3, arms: "R" });
+    old.hold(32, 34.6, { head: 20 }).say("12.40 m", 32.2, 34.6).k(34.8, { head: 0 }).hold(35, 36, THUMB);
+    old.k(36.4, { hR: [3, -60] }).k(38.2, { hR: [3, -60] }).k(38.6, { uaR: -8, faR: 0 }).say("…", 36.4, 38.6);
+    old.walk(39, 43.6, 1324, { stride: 0.22, arms: "R" });
+    old.k(44.6, { hR: [-18, -54] }).wag(45.4, 46.6, "faR", 10, 0.3).k(47, { uaR: -8, faR: 0 }).say("THERE.", 45.4, 47.4);
+    old.walk(50.4, 55.4, 1365, { stride: 0.3, arms: "R" });
+    old.k(56.2, { hR: [-13, -34] }).wag(56.6, 58.2, "faR", 8, 0.25).k(58.8, { uaR: -8, faR: 0 });
+
+    kid.k(11.6, { hR: [10, -34] }).hold(12, 12.5, { hR: [3, -58] }).k(12.9, { hR: [10, -26] }).say("OOPS", 12.8, 14.6);
+    kid.hold(19, 22.4, { head: 18 }).hold(22.8, 24, { hR: [4, -63, "out"], head: 0 }).say("YES SIR!", 22.8, 24.4).k(24.6, { hR: [10, -34] });
+    kid.k(35.1, { hR: [10, -34] }).k(35.4, { hR: [8, -68], hL: [-8, -68], y: 0 }).k(35.7, { y: -10 }).k(36.1, { y: 0 }).k(36.5, { y: -10 }).k(36.9, { y: 0 });
+    tk(kid.hg, "y", T, [[0, 0], [36.6, 0], [36.85, 5], [45.2, 5], [45.6, 0], [T, 0]]);
+    kid.k(37.4, { hL: [18, -46], hR: [20, -48] });
+    kid.walk(37.6, 41, 1306, { stride: 0.3, arms: "" });
+    kid.k(41, { r: 0, y: 0 }).k(41.25, { r: -8, y: -3 }).k(41.8, { r: 0, y: 0 }).say("OW", 41.2, 42.8).k(42.2, { ...ARMS });
+    kid.hold(46, 47.6, THUMB).k(48, { ...ARMS }).say("THX!", 47.6, 49);
+    kid.walk(50, 55, 1340, { stride: 0.22, arms: "LR" });
+    kid.k(56.2, { hR: [12, -40] }).wag(56.6, 58.2, "faR", 8, 0.25).k(58.9, { hR: [10, -34] });
+    [kid, old].forEach((a) => a.done());
+  }
+
+  /* 03 careers — first day nerves: the rookie rehearses his hello; the old
+     hand, on a crate with his thermos, laughs, shows him how to be cool; the
+     rookie overdoes it and falls flat, sets off for the recruiter, loses his
+     nerve halfway and is sent back out */
+  {
+    const T = 56, C = castOf(3, T);
+    el("rect", { x: 144, y: 386, width: 32, height: 14, class: "sc-crate" }, C);
+    const old = oldHand(C, T, 160, { ...SIT, hL: [5, -27], hR: [7, -27] });
+    el("rect", { x: -3, y: 6, width: 6, height: 12, rx: 1.5, class: "sc-mug" }, old.m.aL.fore); // the thermos
+    const kid = rookie(C, T, 330);
+    const sip = (a, t) => a.k(t, { hL: [5, -27] }).k(t + 0.5, { hL: [3, -57], head: -8 }).k(t + 1.2, { hL: [3, -57], head: -8 }).k(t + 1.7, { hL: [5, -27], head: 0 });
+    sip(old, 2); sip(old, 6.4);
+    old.k(14.4, { head: -10 }).wag(14.4, 17, "bob", 1.6, 0.15).say("HA!", 14.6, 16.6).k(17, { head: 0 });
+    old.k(17.2, { hR: [14, -50] }).wag(17.4, 19.4, "faR", 25, 0.3).k(19.8, { hR: [7, -27] });
+    old.k(20.2, { r: -10, hL: [6, -40], hR: [-6, -42] }).k(24.6, { r: -10, hL: [6, -40], hR: [-6, -42] }).k(25.2, { r: 3, hL: [5, -27], hR: [7, -27] }).say("RELAX.", 20.4, 23);
+    old.k(27.4, { head: -10 }).wag(27.4, 30, "bob", 1.6, 0.15).say("HA HA", 27.6, 30).k(30.2, { head: 0 });
+    old.hold(45.6, 47.6, { hR: [22, -50] }).k(48, { hR: [7, -27] }).say("GO.", 45.8, 48);
+    sip(old, 50.4);
+
+    kid.walk(0, 1.8, 380, { stride: 0.22 }).walk(2.2, 4, 330, { stride: 0.22 }).hold(0, 4, { head: 15 });
+    kid.k(4.4, { r: 0, head: 0 }).hold(5, 6.2, { r: 28 }).k(6.8, { r: 0 }).say("HELLO, SIR!", 4.6, 7);
+    kid.k(7.6, { hR: [20, -40] }).wag(7.8, 10.6, "faR", 12, 0.2).k(11, { ...ARMS }).say("I'M READY", 8, 10.8);
+    kid.k(11.4, { ...THUMB, uaL: 150, faL: -30, y: 0 }).k(11.8, { y: -8 }).k(12.2, { y: 0 }).k(12.6, { y: -8 }).k(13, { y: 0 }).k(13.6, { ...ARMS });
+    kid.walk(17, 20, 200, { stride: 0.24 });
+    kid.wag(20.4, 24.4, "head", 7, 0.5);
+    kid.k(25.2, { r: 10, hL: [6, -40], hR: [-6, -42] }).k(26.2, { r: 22 }).k(26.6, { r: 90 }).say("WHOA", 25.6, 27).wag(27, 28.2, "uaR", 30, 0.2);
+    kid.k(30, { r: 90, ...ARMS }).k(31.4, { r: 0 });
+    kid.k(32, { hR: [5, -27], hL: [-6, -30] }).wag(32.2, 33.8, "faR", 20, 0.15).k(34, { ...ARMS });
+    kid.walk(34.2, 38, 450, { stride: 0.2, big: 1.3 }).k(34.4, { r: -3 }).k(38, { r: -3 });
+    kid.k(38.2, { r: 0, head: 14 }).k(40.4, { head: 14 }).say("…", 38.4, 40.4);
+    kid.run(40.6, 43.8, 230).k(43.8, { head: 0 }).say("LATER?", 43.9, 45.4).hold(45.6, 48, { head: 16 });
+    kid.walk(48.2, 53, 330, { stride: 0.3 }).k(53, { head: 15 });
+    kid.k(53.4, { bob: -1.5, hL: [-14, -44], hR: [14, -44], head: -6 }).k(55, { bob: 0, ...ARMS, head: 15 });
+    [old, kid].forEach((a) => a.done());
+  }
+
+  /* 04 contact — notes by paper plane: the first nose-dives, the second
+     makes it to the old hand, who laughs and sends one back with a loop
+     that lands on the rookie's helmet; the foreman pockets the crashed one */
+  {
+    const T = 56, C = castOf(4, T);
+    el("rect", { x: 284, y: 386, width: 32, height: 14, class: "sc-crate" }, C);
+    const kid = rookie(C, T, 1320, { hL: [10, -36], hR: [8, -40], head: 16 });
+    const old = oldHand(C, T, 300, { ...SIT, hL: [5, -27], hR: [7, -27] });
+    const boss = foreman(C, T, 1720);
+    const plane = () => { const p = chain(C, ["o", "x", "y", "r", "sx"]); el("path", { d: "M-9 0 L8 -4 L5 0 L8 3 Z M-9 0 L5 0", class: "sc-plane" }, p.sx); return p; };
+    const p1 = plane(), p2 = plane();
+    const HAND = [1329.5, 365.6];
+    tk(p1.o, "o", T, [[0, 0], [5.7, 0], [5.8, 1], [46.5, 1], [46.6, 0], [T, 0]]);
+    tk(p1.x, "x", T, [[0, HAND[0]], [6, HAND[0]], [7, 1310], [7.3, 1339], [7.8, 1270], [8.6, 1225], [9.4, 1190], [42, 1190], [43.4, 1198], [46.5, 1198], [50, HAND[0]], [T, HAND[0]]], { lin: true });
+    tk(p1.y, "y", T, [[0, HAND[1]], [6, HAND[1]], [7, 350], [7.3, 352], [7.8, 330], [8.6, 345], [9.4, 396], [9.6, 392], [9.8, 396], [42, 396], [43.4, 346], [46.5, 346], [50, HAND[1]], [T, HAND[1]]]);
+    tk(p1.r, "r", T, [[0, 0], [7.3, 10], [7.8, 0], [8.6, -35], [9.4, -20], [42, -20], [43.4, 0], [T, 0]]);
+    tk(p2.o, "o", T, [[0, 0], [13.7, 0], [13.8, 1], [38.9, 1], [39, 0], [T, 0]]);
+    tk(p2.x, "x", T, [[0, HAND[0]], [14, HAND[0]], [14.8, 1310], [15, 1339], [16.4, 1000], [17.6, 700], [18.7, 450], [19.6, 316], [21, 316], [21.4, 310], [26.6, 310], [29, 290], [30, 320], [31.6, 760], [31.9, 800], [32.2, 830], [32.5, 800], [32.8, 770], [33.1, 800], [34.2, 1100], [35, 1318], [36.8, 1318], [37.4, 1330], [38.9, 1330], [44, HAND[0]], [T, HAND[0]]], { lin: true });
+    tk(p2.y, "y", T, [[0, HAND[1]], [14, HAND[1]], [14.8, 350], [15, 352], [16.4, 260], [17.6, 240], [18.7, 300], [19.6, 350], [21, 350], [21.4, 352], [26.6, 352], [29, 340], [30, 344], [31, 290], [31.6, 280], [31.9, 280], [32.2, 250], [32.5, 220], [32.8, 250], [33.1, 280], [34.2, 300], [35, 336], [36.8, 336], [37.4, 365], [38.9, 365], [44, HAND[1]], [T, HAND[1]]]);
+    tk(p2.r, "r", T, [[0, 0], [15, 12], [16.4, 4], [17.6, 0], [18.7, -8], [19.6, -12], [21.4, 0], [30, -10], [31.6, 0], [31.9, -45], [32.2, -90], [32.5, -180], [32.8, -270], [33.1, -360], [34.2, -365], [35, -350], [36.8, -350], [37.4, -360], [44, -360], [44.1, 0], [T, 0]]);
+    tk(p2.sx, "sx", T, [[0, 1], [28, 1], [28.1, -1], [39, -1], [39.1, 1], [T, 1]]);
+
+    const write = (t0, t1) => kid.k(t0, { hL: [10, -36], hR: [8, -40], head: 16 }).wag(t0 + 0.1, t1, "faR", 10, 0.2);
+    const fold = (t0, t1) => kid.k(t0, { hL: [10, -40], hR: [12, -40], head: 12 }).wag(t0 + 0.1, t1, "faL", 15, 0.25);
+    write(0, 4); fold(4, 6);
+    kid.k(6.6, { hR: [-12, -58], head: 0 }).k(7.3, { hR: [22, -56] }).k(8, { ...ARMS }).k(9.4, { head: 10 });
+    kid.hold(9.6, 11.4, { hL: [3, -60] }).say("UGH", 9.7, 11.6);
+    fold(11.8, 14);
+    kid.k(14.6, { hR: [-12, -58], head: 0 }).k(15, { hR: [22, -56] }).k(15.8, { ...ARMS }).hold(16, 19.6, { head: -8 });
+    kid.say("?", 35.2, 36.6).k(36.2, { ...ARMS }).k(36.8, { hR: [2, -70] }).k(37.4, { hR: [10, -40], hL: [8, -40], head: 16 }).k(38.9, { head: 16 });
+    kid.k(39.1, { hR: [8, -68], hL: [-8, -68], head: 0, y: 0 }).k(39.4, { y: -10 }).k(39.8, { y: 0 }).k(40.2, { y: -10 }).k(40.6, { y: 0 }).say("YES!", 39.2, 41.4);
+    kid.k(42, { hR: [10, -66], hL: [8, -36] }).wag(42.2, 45, "faR", 25, 0.3).k(45.4, { ...ARMS });
+    write(46, 56);
+
+    old.k(19, { hR: [8, -40] }).k(19.5, { hR: [16, -61] }).k(21, { hR: [16, -61] }).say("!", 19.7, 21);
+    old.hold(21.4, 24, { hR: [8, -58], hL: [4, -52], head: 12 });
+    old.k(24.2, { head: -10 }).wag(24.2, 26.4, "bob", 1.6, 0.15).say("HA!", 24.2, 26.2);
+    old.k(26.6, { hL: [8, -44], hR: [10, -44], head: 10 }).wag(26.8, 28.8, "faL", 15, 0.25);
+    old.k(29.2, { hR: [-10, -58], head: 0 }).k(30, { hR: [20, -58] }).k(30.8, { hL: [5, -27], hR: [7, -27] });
+    old.k(42.6, { hR: [10, -80] }).wag(42.8, 45.6, "faR", 25, 0.3).k(46, { hR: [7, -27] });
+
+    boss.walk(34, 41.6, 1202, { arms: "R" });
+    boss.k(42, { ...STAND }).k(42.8, { ...SQUAT, hR: [-12, -12] }).k(43.4, { ...STAND, hR: [-4, -50] }).hold(43.6, 46.2, { hR: [-4, -50], head: 16 });
+    boss.say("HEH", 44.6, 46.4).k(46.6, { uaR: -8, faR: 0, head: 0 });
+    boss.walk(47, 54.4, 1720, { arms: "R" });
+    [kid, old, boss].forEach((a) => a.done());
+  }
+
+  /* 05 the end — a curtain call: the four come on, bow; the rookie bows
+     too deep and his helmet rolls off, he chases it; they bow again, wave,
+     a spin from the headphones, and off they go to lunch */
+  {
+    const T = 60, C = castOf(5, T);
+    const boss = foreman(C, T, 1720), old = oldHand(C, T, 1720), dj = headphones(C, T, 1720), kid = rookie(C, T, 1720);
+    boss.walk(0, 6, 1440, { arms: "R" });
+    old.walk(2, 9.4, 1480, { stride: 0.32, arms: "R" });
+    dj.walk(4, 9, 1520).wag(4, 9, "head", 7, 0.5).float("♪", 4, 9.4, { cls: "sc-note" });
+    kid.run(6.4, 9.2, 1565);
+    boss.hold(10, 11.8, { hR: [6, -66] }).k(12.1, { uaR: -8, faR: 0 }).say("AND…", 10.2, 12);
+    const bow = (a, t, deg = -28) => a.k(t, { r: a.B.r }).hold(t + 0.6, t + 1.4, { r: deg }).k(t + 2, { r: a.B.r });
+    [boss, old, dj].forEach((a) => bow(a, 12));
+    kid.k(12, { r: 0 }).k(12.7, { r: -62 }).k(13.4, { r: -62 }).k(14, { r: 0 }).say("!", 13.2, 14.6);
+    tk(kid.hg, "o", T, [[0, 1], [12.85, 1], [12.9, 0], [18, 0], [18.1, 1], [T, 1]]);
+    const hel = chain(C, ["o", "x", "y", "r"]);
+    el("path", { d: "M-9 0 A9 9 0 0 1 9 0 Z M-12 0 H12", class: "sc-helmet sc-hel" }, hel.r);
+    tk(hel.o, "o", T, [[0, 0], [12.85, 0], [12.9, 1], [16.4, 1], [16.5, 0], [T, 0]]);
+    tk(hel.x, "x", T, [[0, 1519], [12.9, 1519], [13.4, 1514], [13.7, 1522], [16.4, 1700], [T, 1519]], { lin: true });
+    tk(hel.y, "y", T, [[0, 372], [12.9, 372], [13.4, 398], [13.55, 392], [13.7, 398], [T, 372]]);
+    tk(hel.r, "r", T, [[0, -62], [12.9, -62], [13.4, -150], [13.7, -180], [16.4, 360], [T, -62]]);
+    kid.run(14.4, 17.4, 1720);
+    [boss, old, dj].forEach((a) => a.hold(14, 16.4, { head: 14 }).k(16.8, { head: 0 }));
+    boss.k(19, { hL: [-14, -44, "out"], hR: [14, -44, "out"] }).k(21, { hL: [-14, -44, "out"], hR: [14, -44, "out"] }).k(21.4, { hL: [6, -38], uaR: -8, faR: 0 });
+    old.k(19.4, { head: -10 }).wag(19.4, 21.8, "bob", 1.6, 0.15).say("HA!", 19.6, 21.6).k(22, { head: 0 });
+    dj.wag(19, 22, "head", 7, 0.4).wag(19, 22, "bob", 1.2, 0.4).float("♪", 19, 22.4, { cls: "sc-note" });
+    kid.run(22, 25.4, 1565).say("SORRY!", 25.4, 27.2);
+    [boss, old, dj].forEach((a) => bow(a, 27.6));
+    kid.k(27.4, { hL: [2, -70] }).k(27.6, { r: 0 }).hold(28.2, 29.4, { r: -28 }).k(30, { r: 0, ...ARMS });
+    [boss, old, dj, kid].forEach((a, i) => a.k(30.6 + i * 0.15, { hR: [10, -66] }).wag(30.8 + i * 0.15, 33.6, "faR", 25, 0.3).k(34, { uaR: -8, faR: 0 }));
+    boss.say("THANK YOU!", 30.8, 33.6);
+    dj.k(34.6, { sx: 1 }).k(35, { sx: -1 }).k(35.4, { sx: 1 }).k(35.8, { sx: -1 }).k(36.2, { sx: 1 }).wag(34.4, 38, "bob", 1.4, 0.3).float("♪", 34, 38.2, { cls: "sc-note" });
+    [boss, old, kid].forEach((a) => a.k(34.4, { hL: [6, -42], hR: [10, -42] }).wag(34.6, 37.8, "uaR", 10, 0.25).k(38, { ...a === boss ? { hL: [6, -38] } : { uaL: 8, faL: 0 }, uaR: -8, faR: 0 }));
+    old.hold(38.4, 40.8, { hR: [-4, -44, "out"], head: 16 }).k(41.2, { uaR: -8, faR: 0, head: 0 }).say("LUNCH?", 38.6, 41);
+    kid.run(41.2, 43.6, 1720);
+    dj.walk(41.6, 46, 1720).wag(41.6, 46, "head", 7, 0.5);
+    old.walk(42.6, 50, 1720, { stride: 0.32, arms: "R" });
+    boss.k(44, { hR: [10, -66] }).wag(44.2, 45.6, "faR", 25, 0.3).k(45.9, { uaR: -8, faR: 0 });
+    boss.walk(46, 51, 1720, { arms: "R" });
+    [boss, old, dj, kid].forEach((a) => a.done());
+  }
+
   const SHOT = { 0: { x: 400, h: 240 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 1050, h: 210 } };
   const STRIP = 150; // px
   const phone = () => innerWidth < 1100;
