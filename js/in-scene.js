@@ -527,11 +527,13 @@
     // drawing mode: a sign, MADE BY ALDY, and the man who comes to put it up
     const aldyG = el("g", { class: "sc-aldy-g" }, L);
     const sign = el("g", { class: "sc-aldy" }, aldyG);
-    el("path", { d: "M980 400V372", class: "sc-post" }, sign);
-    el("rect", { x: 938, y: 348, width: 84, height: 24, class: "sc-aldy__board" }, sign);
-    el("use", { href: "#aldy", x: 944, y: 353, width: 14, height: 14, class: "sc-aldy__mark" }, sign);
-    el("text", { x: 962, y: 364, class: "sc-aldy__t" }, sign).textContent = "MADE BY ALDY";
-    const signer = person(1040, G, { cls: "sc-signer" }, crewG(aldyG));
+    el("path", { d: "M1300 400V386 M1352 400V386", class: "sc-post" }, sign);
+    const link = el("a", { href: "https://aldystudio.com", target: "_blank", rel: "noopener", class: "sc-aldy__link", "aria-label": "Made by ALDY — aldystudio.com" }, sign);
+    el("rect", { x: 1262, y: 340, width: 128, height: 46, class: "sc-aldy__board" }, link);
+    el("use", { href: "#aldy", x: 1272, y: 349, width: 28, height: 28, class: "sc-aldy__mark" }, link);
+    el("text", { x: 1310, y: 356, class: "sc-aldy__s" }, link).textContent = "MADE BY";
+    el("text", { x: 1309, y: 378, class: "sc-aldy__t" }, link).textContent = "ALDY";
+    const signer = person(1232, G, { cls: "sc-signer" }, crewG(aldyG));
     el("path", { d: "M0 18 v6 M-5 24 h10", class: "sc-tool" }, signer.aR.fore); // the mallet
     track(signer.aR.up, "r", merge(wave(0, 30, 70, 120, 2.2), [[32, 20], [70, 20], [72, -160], [80, -160], [82, 20], [100, 20]]));
     track(signer.aR.fore, "r", [[0, 30], [30, 30], [32, 0], [100, 0]]);
@@ -565,7 +567,7 @@
   /* phones: no room for the whole yard, so each screen gets a close-up —
      a camera on one worker (and whoever is beside him). x is where he
      stands, h how much height the shot takes in. */
-  const SHOT = { 0: { x: 400, h: 240 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 760, h: 210 } };
+  const SHOT = { 0: { x: 400, h: 240 }, 1: { x: 512, h: 200 }, 2: { x: 770, h: 250 }, 3: { x: 1250, h: 210 }, 4: { x: 560, h: 190 }, 5: { x: 1050, h: 210 } };
   const STRIP = 150; // px
   const phone = () => innerWidth < 1100;
   const aim = () => {

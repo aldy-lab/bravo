@@ -834,7 +834,9 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 [data-mode="drawing"] .sc-flash { fill: var(--accent); mix-blend-mode: normal; opacity: .5; }
 
 /* made by ALDY */
-.in-made { margin-top: 18px; }
+.in-made { position: absolute; right: var(--gutter); bottom: 14px; z-index: 3; pointer-events: auto; }
+.in-sec--end { position: relative; }
+@media (max-width: 1099px) { .in-made { bottom: calc(var(--scene-h, 140px) + 4px); } }
 .aldy { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--ik-2); text-decoration: none; font-size: .8125rem; letter-spacing: .04em; transition: color .25s; }
 .aldy svg { width: 14px; height: 14px; fill: currentColor; opacity: .7; transition: opacity .25s; }
 .aldy b { font-weight: 700; letter-spacing: .08em; }
@@ -853,6 +855,9 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .sc-post { fill: none; stroke: var(--ik); stroke-width: 1.4; }
 .sc-aldy__board { fill: var(--pp); stroke: var(--ik); stroke-width: 1.2; }
 .sc-aldy__mark { fill: var(--ik); }
-.sc-aldy__t { fill: var(--ik); stroke: none; font: 700 8px var(--f-text); letter-spacing: .12em; }
+.sc-aldy__s { fill: var(--ik); stroke: none; font: 600 8px var(--f-text); letter-spacing: .2em; }
+.sc-aldy__t { fill: var(--ik); stroke: none; font: 800 22px var(--f-display); letter-spacing: .02em; }
+.sc-aldy__link { pointer-events: auto; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .sc-aldy__link:hover .sc-aldy__board { fill: var(--accent); } .sc-aldy__link:hover :is(.sc-aldy__t, .sc-aldy__s, .sc-aldy__mark) { fill: #fff; } }
 .sc-aldy { transition: transform .7s cubic-bezier(0.34, 1.4, 0.64, 1), opacity .3s; }
 .is-awaiting .sc-aldy { transform: translateY(40px); opacity: 0; }
