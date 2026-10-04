@@ -842,8 +842,9 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 .sc-gripe { fill: var(--accent); stroke: none; font: 700 13px var(--f-text); letter-spacing: .04em; }
 .is-serving .sc-gripe { display: none; }
 /* end: the ALDY sign, drawing mode only; planted once its man has arrived */
-.sc-aldy-g { display: none; }
-[data-mode="drawing"] .sc-aldy-g { display: inline; }
+/* dark: the poster stands alone; drawing: the signer plants it */
+.sc-aldy-g .sc-signer { display: none; }
+[data-mode="drawing"] .sc-aldy-g .sc-signer { display: inline; }
 .sc-post { fill: none; stroke: var(--ik); stroke-width: 1.4; }
 .sc-aldy__board { fill: var(--pp); stroke: var(--ik); stroke-width: 1.2; }
 .sc-aldy__mark { fill: var(--ik); }
