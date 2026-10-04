@@ -578,7 +578,7 @@ html:has(body.ind) { scroll-snap-type: y mandatory; }
 
 /* ── Variant E: the assembly scene behind the page ───── */
 .in-scene {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 46%; z-index: -1; pointer-events: none;
+  position: fixed; left: 0; right: 0; bottom: 0; height: 46%; z-index: 4; pointer-events: none;
   contain: strict;
 }
 .in-scene svg { width: 100%; height: 100%; overflow: visible; }
